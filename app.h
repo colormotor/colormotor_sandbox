@@ -15,13 +15,19 @@ public:
     ImGuiTextBuffer lg;
     Console console;
     bool showConsole=true;
+    float paramWidth=300;
     
 	App()
 	:
-	AppModule("Main Module")
+	AppModule("Main Module"),
+    params("Settings")
 	{
 		instance = this;
         params.addBool("Console",&showConsole);
+        params.addFloat("paramWidth",&paramWidth,200,600)->noGui();
+        params.loadXml(getExecutablePath()+"/settings.xml");
+        std::string dt = binarize("basic_icons.ttf","icon_font");
+        printf("%s",dt.c_str());
 	}
     
     void replError( const std::string & buf )
@@ -47,22 +53,49 @@ public:
         pyrepl::logCallback(&App::replLog, this);
         pyrepl::errCallback(&App::replError, this);
         pyrepl::reloadCallback(&App::replReload, this);
+        pyrepl::resize(paramWidth, appHeight()-console.inputHeight);
         pyrepl::init();
         
+        ui::init();
         return true;
 	}
 
 	void exit()
 	{
         pyrepl::exit();
+        params.saveXml(getExecutablePath()+"/settings.xml");
 	}
 
 	bool gui()
 	{
+        // Resizable settings UI on the side
+        static bool show=true;
+        ImVec2 size = ImVec2(paramWidth,appHeight());
+        ImGui::SetNextWindowSize(size);
+        ImGui::SetNextWindowPos(ImVec2(appWidth()-paramWidth,0));
+        ImGui::Begin("COLORMOTOR",&show, size, -1.0f, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings);
+        ImGui::Button("<",ImVec2(5,appHeight()-10));
+        if(ImGui::IsItemActive())
+        {
+            float dx = ImGui::GetIO().MouseDelta.x;
+            paramWidth -= dx;
+            if(paramWidth > 400)
+                paramWidth=400;
+            if(paramWidth < 200)
+                paramWidth = 200;
+        }
+        ImGui::SameLine();
+        ImGui::BeginChild("content");
         imgui(params); // Creates a UI for the parameters
         pyrepl::gui();
+        ImGui::EndChild();
+        ImGui::End();
         
-        console.draw("Repl",&showConsole);
+        // Console
+        if(pyrepl::hasErrors())
+            console.consoleOpen = true;
+        
+        console.draw(appWidth()-paramWidth, appHeight()/3);
 		return false;
 	}
     
@@ -79,6 +112,7 @@ public:
         gfx::setOrtho(w,h);
         gfx::setBlendMode(gfx::BLENDMODE_ALPHA);
         gfx::color(1);
+        pyrepl::resize(appWidth()-paramWidth, appHeight()-console.inputHeight);
         pyrepl::frame();
 	}
 };

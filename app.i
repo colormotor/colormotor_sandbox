@@ -12,7 +12,6 @@
 #ifdef check
 	#undef check
 #endif
-	
 #include "pyrepl.h"
 %} 
 
@@ -42,10 +41,10 @@ namespace pyapp
 	    KEY_ESCAPE = ImGuiKey_Escape    // for text edit
   	};
 
-	double time();
-    double msecs();
     double dt();
     double frameMsecs();
+    double fps();
+
     float width();
     float height();
     float mouseX();
