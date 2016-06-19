@@ -27,6 +27,10 @@ namespace cm
         bool reload();
         bool duplicateScript();
         
+        bool hasErrors();
+        
+        void resize( int w, int h );
+        
         void log( const char *msg, ... );
         void error( const char *msg, ... );
         void dumpErrors();
@@ -78,10 +82,10 @@ namespace cm
             KEY_ESCAPE = ImGuiKey_Escape    // for text edit
         };
         
-        double time();
-        double msecs();
         double dt();
         double frameMsecs();
+        double fps();
+        
         float width();
         float height();
         float mouseX();
@@ -96,22 +100,20 @@ namespace cm
         bool mouseReleased( int i );
         bool mouseDoubeClicked( int i );
         
-        void setFloat01( const std::string & name, float v );
         void setFloat( const std::string & name, float v );
         float getFloat( const std::string & name );
-        float getFloat01( const std::string & name );
         bool getBool( const std::string & name );
         void setBool( const std::string & name, bool val );
         std::string getString( const std::string & name );
         void setString( const std::string & name, const std::string & val );
-        Color getColor( const std::string & name );
+        //V4 getColor( const std::string & name );
         int getInt( const std::string & name );
         
         Param* addFloat( const std::string & name, float val, float min, float max, const std::string & widgetType = "SLIDER" );
         Param* addEvent( const std::string & name, PyObject * func = 0 );
         Param* addAsyncEvent( const std::string & name, PyObject * func = 0 );
         Param* addBool( const std::string & name, bool val );
-        Param* addColor( const std::string & name, const Color & clr );
+        //Param* addColor( const std::string & name, const V4& clr );
         Param* addString( const std::string & name, const std::string & val );
         
         void setParamPath( const char * path );

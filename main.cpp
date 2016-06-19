@@ -33,33 +33,10 @@ int appInit( void* userData, int argc, char **argv)
 
 void appGui()
 {
-	// Selects current module
-	ImGui::BeginToolbar("toolbar",0,0);
-
-	for( int i = 0; i < modules.size(); i++ )
-	{
-	    //ImGui::PushID();
-	    if (ImGui::Selectable(modules[i]->name.c_str(), i==curModule, 0, ImVec2(60,30)))
-	    {
-			modules[curModule]->deactivated();
-			curModule = i;
-			modules[curModule]->activated();
-	    }
-	    
-	    //ImGui::PopID();
-	    if( i < modules.size() )
-			ImGui::SameLine();
-       
-	}
-
-	ImGui::End();
-    
-    ImGui::Begin("Parameters");
 	modules[curModule]->gui();
-    ImGui::End();
-    
-    ImGui::ShowTestWindow();
-    ImGui::ShowStyleEditor();
+    //ImGui::ShowTestWindow();
+    //ImGui::SetupStyleFromHue();
+    //ImGui::ShowStyleEditor();
 }
     
 

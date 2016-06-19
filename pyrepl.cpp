@@ -14,7 +14,6 @@
 #include "cm_wrap.h"
 #include "app_wrap.h"
 
-
 extern "C" 
 {
 void SWIG_init();
@@ -71,6 +70,7 @@ namespace pyrepl
 
 static std::vector<PyEvent> events;
 
+static int errStatus = 0;
 static bool mustReload = false;
 static bool scriptLoaded = false;
 static bool failedToLoad = false;
@@ -102,6 +102,9 @@ static Trigger<bool> _duplicateScript;
 
 static PyObject* app;
     
+static int renderWidth = -1;
+static int renderHeight = -1;
+
 int execute( const std::string & str )
 {
 	return PyRun_SimpleString(str.c_str());
@@ -139,6 +142,8 @@ static void print( const char *msg, ... )
 	vsnprintf( msgBuf, 1024, msg, va_alist );
 	va_end( va_alist );
 	msgBuf[1024 - 1] = '\0';
+    
+    printf(msgBuf);
 }
 
 static bool hasFileChanged()
@@ -160,6 +165,7 @@ void log( const char *msg, ... )
 	va_end( va_alist );
 	msgBuf[1024 - 1] = '\0';
 	
+    print(msgBuf);
     if(logCb)
         logCb(msgBuf);
 //    for( int i = 0; i < listeners.size(); i++ )
@@ -273,6 +279,11 @@ bool callAppMethod( const std::string & func )
     return true;
 }
 
+void resize( int w, int h )
+{
+    renderWidth = w; renderHeight = h;
+}
+    
 bool init()
 {
 	gfx::setManualGLRelease(true);
@@ -299,10 +310,11 @@ bool init()
 	
 	// init gui and params
 	// add default params
-    params.addBool( "reload modules", &reloadModules );
-	params.addEvent( "load script...", _loadScript );
-	params.addEvent( "reload script", _reloadScript )->appendOption("sameline");
-    params.addEvent("duplicate script...",_duplicateScript)->appendOption("sameline");;
+    params.addEvent( "load...", _loadScript );
+	params.addEvent( "reload", _reloadScript )->appendOption("sameline");
+    params.addEvent("duplicate...",_duplicateScript)->appendOption("sameline");;
+    params.addBool( "reload modules", &reloadModules )->appendOption("sameline");
+    
 	params.addString( "last script",&lastScript )->appendOption("g");
 
 	// Set program name
@@ -313,7 +325,7 @@ bool init()
 	// Swig bindings
 	initializeSwig_cm();
 	initializeSwig_app();
-
+    
 	// Capture stderr/out
 	Py_InitModule("log", logMethods);
 	
@@ -436,8 +448,14 @@ void frame()
 	if( !active )
 		return;
 	
-	callAppMethod("frame");
-
+    gfx::pushViewport();
+    gfx::setViewport(0, appHeight() - pyapp::height(), pyapp::width(), pyapp::height());
+    gfx::setOrtho(pyapp::width(), pyapp::height());
+	if(!callAppMethod("frame"))
+    {
+        errStatus = 1;
+    }
+    gfx::popViewport();
     gfx::releaseGLObjects();
 
 }
@@ -483,11 +501,18 @@ static std::string readFile( const std::string & path )
 
 bool load( const std::string & path, bool bInit, int reloadCount  )
 {
-    if(reloadCb)
+    if(reloadCb && reloadCount==0)
         reloadCb();
+
+    if(reloadCount==0)
+    {
+        errStatus = 0;
+        
+        if(curPath != "none")
+            if(!callAppMethod("exit"))
+                errStatus = 1;
+    }
     
-	callAppMethod("exit");
-	
 	// Save script params if load was successful
 	if( curPath != "none" && reloadCount == 0 ) // Just save on successful load
 	{
@@ -562,6 +587,7 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 		if( reloadCount == 0 )
 		{
 			failedToLoad = true;
+            errStatus = 1;
             //hasError = true;
 			error("Error loading script attempting to load last version");
 			return load(curPath + "tmp.py",true,1);
@@ -583,18 +609,23 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 		fclose(f);
 	}
 
+    std::string xm = curPath+ scriptName + ".xml";
+    if( curPath != "none" )
+    {
+        log(xm.c_str());
+        loadScriptParams(xm.c_str());
+    }
+
 	// TODO Check for errors here as well
 	if(bInit)
-		callAppMethod("init");
+    {
+		if(!callAppMethod("init"))
+        {
+            errStatus = 1;
+        }
+    }
 	
-	std::string xm = curPath+ scriptName + ".xml";
-	if( curPath != "none" )
-	{
-		log(xm.c_str());
-		loadScriptParams(xm.c_str());
-	}
-	
-	callAppMethod("setup");
+	//callAppMethod("setup");
 	
 	return true;
 }
@@ -648,7 +679,10 @@ bool duplicateScript()
 }
 
 
-
+bool hasErrors()
+{
+    return errStatus != 0;
+}
 
 void run( PyObject * obj )
 {
@@ -664,36 +698,34 @@ void run( PyObject * obj )
 
 namespace pyapp
 {
-	double time()
-	{
-        return 0; //getCurrentTime()*0.01;
-	}
-	
 	double dt()
 	{
-        return 0; //getFrameTime()*0.001;
+        return appFrameTime();
 	}
 	
-		
-	double msecs()
-	{
-        return 0; //getCurrentTime();
-	}
-
 	double frameMsecs()
 	{
-        return 0; //getFrameTime();
+        return appFrameTime() * 1000;
 	}
 
+	double fps()
+	{
+		return ImGui::GetIO().Framerate;
+	}
+	
 	// app utils
 	float width()
 	{
-		return appWidth();
+        if(pyrepl::renderWidth == -1)
+            return appWidth();
+        return pyrepl::renderWidth;
 	}
 
 	float height()
 	{
-		return appHeight();
+        if(pyrepl::renderHeight == -1)
+            return appHeight();
+        return pyrepl::renderHeight;
 	}
 
 	float mouseX() 
@@ -719,21 +751,26 @@ namespace pyapp
 
 	bool mouseDown( int i )
 	{
-        if(ui::hasFocus())
-            return false;
-        
-		//if( pyrepl::app->_gui->hasFocus() )
-		//	return false;
-		
         return Mouse::down(i);
 	}
     
-    bool keyPressed( int k ) { return false; }
-    bool keyReleased( int k ) { return false; }
+    bool keyPressed( int k )
+    {
+        if( ui::hasFocus() )
+            return false;
+        return Keyboard::pressed(k,0);
+    }
+    
+    bool keyReleased( int k )
+    {
+        if( ui::hasFocus() )
+            return false;
+        return Keyboard::released(k);
+    }
 
-    bool mouseClicked( int i) { return false; }
-    bool mouseReleased( int i ) { return false; }
-    bool mouseDoubeClicked( int i ) { return false; }
+    bool mouseClicked( int i) { return Mouse::clicked(i); }
+    bool mouseReleased( int i ) { return Mouse::released(i); }
+    bool mouseDoubeClicked( int i ) { return Mouse::doubleClicked(i); }
 
 	void setFloat( const std::string & name, float v )
 	{
