@@ -1,6 +1,8 @@
 # Colormotor Python Sandbox
 Live reloading sandbox for PyColormotor. 
 
+![alt tag](https://raw.githubusercontent.com/colormotor/pycm_sandbox_gl/master/shot.jpg)
+
 ### Prerequisites
 First follow the installation instructions for 
 
