@@ -67,13 +67,15 @@ namespace pyapp
     std::string getString( const std::string & name );
     void setString( const std::string & name, const std::string & val );
     int getInt( const std::string & name );
-    
+    arma::vec getColor( const std::string & name );
+
     cm::Param* addFloat( const std::string & name, float val, float min, float max, const std::string & widgetType = "SLIDER" );
     cm::Param* addEvent( const std::string & name, PyObject * func = 0 );
     cm::Param* addAsyncEvent( const std::string & name, PyObject * func = 0 );
     cm::Param* addBool( const std::string & name, bool val );
     cm::Param* addString( const std::string & name, const std::string & val );
-    
+    cm::Param* addColor( const std::string & name, const arma::vec& clr );
+
     void addSeparator();
     //void addParams( const ParamList & params );
     

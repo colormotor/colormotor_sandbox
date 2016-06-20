@@ -907,7 +907,7 @@ namespace pyapp
 		}
 	}
     
-    /*
+    
     Param* addColor( const std::string & name, const V4 & clr )
     {
         Param * p = 0;
@@ -917,13 +917,13 @@ namespace pyapp
             pyrepl::log("parameter %s allready there.....\n",name.c_str());
             return p;
         }
-        p = pyrepl::scriptParams.addColor(name,(Color*)0);
+        p = pyrepl::scriptParams.addColor(name,clr);
         p->setColor(clr);
         
         return p;
     }
 
-    Color getColor( const std::string & name )
+    V4 getColor( const std::string & name )
 	{
 		Param * p = pyrepl::scriptParams.find(name);
 		if( !p )
@@ -933,10 +933,10 @@ namespace pyapp
 		else
 		{
 			pyrepl::log("could not find param %s\n",name.c_str());
-			return Color(0.0);
+			return V4(0,0,0,0);
 		}
 	}
-	*/
+	
 
 	int getInt( const std::string & name )
 	{

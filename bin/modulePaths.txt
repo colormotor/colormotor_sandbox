@@ -1,1 +1,1 @@
-../../pycolormotor/modules
+../../colormotor/addons/pycolormotor/modules

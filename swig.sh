@@ -13,6 +13,6 @@ echo "void initializeSwig_app() { SWIG_init(); }" >> app_wrap.cxx
 echo "void initializeSwig_app();" >> app_wrap.h
 
 echo "copying files"
-cp app.py ./bin/app.py
+cp ./app.py ./bin/app.py
 rm -f ./bin/libpycm.dylib
-cp ../colormotor/addons/pycolormotor/modules/libpycm.dylib
+cp ../colormotor/addons/pycolormotor/modules/libpycm.dylib ./bin/libpycm.dylib

@@ -107,14 +107,14 @@ namespace cm
         void setBool( const std::string & name, bool val );
         std::string getString( const std::string & name );
         void setString( const std::string & name, const std::string & val );
-        //V4 getColor( const std::string & name );
+        V4 getColor( const std::string & name );
         int getInt( const std::string & name );
         
         Param* addFloat( const std::string & name, float val, float min, float max, const std::string & widgetType = "SLIDER" );
         Param* addEvent( const std::string & name, PyObject * func = 0 );
         Param* addAsyncEvent( const std::string & name, PyObject * func = 0 );
         Param* addBool( const std::string & name, bool val );
-        //Param* addColor( const std::string & name, const V4& clr );
+        Param* addColor( const std::string & name, const V4& clr );
         Param* addString( const std::string & name, const std::string & val );
         
         void setParamPath( const char * path );
