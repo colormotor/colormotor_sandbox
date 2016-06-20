@@ -13,6 +13,7 @@
 //#include <boost/python.hpp>
 #include "cm_wrap.h"
 #include "app_wrap.h"
+#include "imgui_internal.h"
 
 extern "C" 
 {
@@ -455,6 +456,10 @@ void frame()
 	if(!callAppMethod("frame"))
     {
         errStatus = 1;
+        // Hack, make sure we are not in an IMGUI Begin/End block
+        ImGuiContext * ctx = ImGui::GetCurrentContext();
+        while(ctx->CurrentWindowStack.Size > 1)
+            ctx->CurrentWindowStack.pop_back();
     }
     gfx::popViewport();
     gfx::releaseGLObjects();
