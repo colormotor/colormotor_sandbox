@@ -86,7 +86,15 @@ public:
         }
         ImGui::SameLine();
         ImGui::BeginChild("content");
+        
         imgui(params); // Creates a UI for the parameters
+        bool vis = ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_AllowOverlapMode); //, NULL, true, true);
+        if(vis)
+        {
+            ImGui::Text("Framerate: %g", pyapp::fps());
+            ImGui::Text("Script: %s", pyrepl::getScriptPath().c_str());
+        }
+        
         pyrepl::gui();
         ImGui::EndChild();
         ImGui::End();

@@ -17,6 +17,9 @@ namespace cm
 {
     namespace pyrepl
     {
+        std::string getScriptPath();
+        std::string getScriptName();
+        
         bool init();
         void exit();
         void update();

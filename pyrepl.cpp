@@ -106,6 +106,9 @@ static PyObject* app;
 static int renderWidth = -1;
 static int renderHeight = -1;
 
+std::string getScriptPath() { return lastScript; }
+std::string getScriptName() { return scriptName; }
+    
 int execute( const std::string & str )
 {
 	return PyRun_SimpleString(str.c_str());
@@ -629,6 +632,11 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
         {
             errStatus = 1;
         }
+    }
+    
+    if(errStatus == 0)
+    {
+        scriptParams.setName(scriptName);
     }
 	
 	//callAppMethod("setup");
