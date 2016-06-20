@@ -53,6 +53,11 @@ namespace pyapp
     float mouseDX();
     float mouseDY();
     
+    arma::vec mouseDelta();
+    arma::vec mousePos();
+    arma::vec center();
+    arma::vec size();
+    
     bool keyPressed( int k );
     bool keyReleased( int k );
     bool mouseDown( int i );

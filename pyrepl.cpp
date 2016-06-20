@@ -755,6 +755,27 @@ namespace pyapp
 		return Mouse::dy();
 	}
 
+	V2 mouseDelta()
+	{
+		return V2(Mouse::dx(), Mouse::dy());
+	}
+
+    V2 mousePos()
+    {
+    	return Mouse::pos();
+    }
+
+    V2 center()
+    {
+    	return V2(width()/2, height()/2);
+    }
+
+    V2 size()
+    {	
+    	return V2(width(), height());
+    }
+
+
 	bool mouseDown( int i )
 	{
         return Mouse::down(i);

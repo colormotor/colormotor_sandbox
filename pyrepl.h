@@ -92,6 +92,10 @@ namespace cm
         float mouseY();
         float mouseDX();
         float mouseDY();
+        V2 mouseDelta();
+        V2 mousePos();
+        V2 center();
+        V2 size();
         
         bool keyPressed( int k );
         bool keyReleased( int k );
