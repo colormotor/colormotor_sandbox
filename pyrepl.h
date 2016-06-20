@@ -100,6 +100,7 @@ namespace cm
         bool mouseReleased( int i );
         bool mouseDoubeClicked( int i );
         
+        void test( const cm::V4& cazzo );
         void setFloat( const std::string & name, float v );
         float getFloat( const std::string & name );
         bool getBool( const std::string & name );

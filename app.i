@@ -12,9 +12,10 @@
 #ifdef check
 	#undef check
 #endif
+#define SWIG_FILE_WITH_INIT
 #include "pyrepl.h"
 %} 
-
+%include "armanpy.i"
 %import "cm.i"
 
 using namespace std;
@@ -58,7 +59,7 @@ namespace pyapp
     bool mouseClicked( int i);
     bool mouseReleased( int i );
     bool mouseDoubeClicked( int i );
-    
+
     void setFloat( const std::string & name, float v );
     float getFloat( const std::string & name );
     bool getBool( const std::string & name );
@@ -67,14 +68,14 @@ namespace pyapp
     void setString( const std::string & name, const std::string & val );
     int getInt( const std::string & name );
     
-    Param* addFloat( const std::string & name, float val, float min, float max, const std::string & widgetType = "SLIDER" );
-    Param* addEvent( const std::string & name, PyObject * func = 0 );
-    Param* addAsyncEvent( const std::string & name, PyObject * func = 0 );
-    Param* addBool( const std::string & name, bool val );
-    Param* addString( const std::string & name, const std::string & val );
+    cm::Param* addFloat( const std::string & name, float val, float min, float max, const std::string & widgetType = "SLIDER" );
+    cm::Param* addEvent( const std::string & name, PyObject * func = 0 );
+    cm::Param* addAsyncEvent( const std::string & name, PyObject * func = 0 );
+    cm::Param* addBool( const std::string & name, bool val );
+    cm::Param* addString( const std::string & name, const std::string & val );
     
     void addSeparator();
-    void addParams( const ParamList & params );
+    //void addParams( const ParamList & params );
     
     bool isTriggered( const std::string & name );
     
@@ -82,7 +83,7 @@ namespace pyapp
     std::string saveFileDialog( const std::string & type );
     std::string openFolderDialog();
     
-    void foo();
+
     void loadScript( const char * script );
 
     // Automatically called and used to hook to repl loop

@@ -68,8 +68,12 @@ void appExit()
 int main( int argc, char ** argv )
 {
     imguiApp( argc, argv,
-	       "GUI Example", 
-             1280 , 720 );
-
+             "GUI Example",
+             1280 , 720,
+             &appInit,
+             &appExit,
+             &appGui,
+             &appRender);
+    
 }
 

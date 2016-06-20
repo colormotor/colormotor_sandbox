@@ -347,6 +347,7 @@ bool init()
 	std::string pp = getCurrentDirectory();
 	std::string syspath;
 	syspath += "import sys\n";
+    syspath += "sys.dont_write_bytecode = True\n";
 	syspath += "sys.path.append(\'";
 	syspath += pp;
 	syspath += "\')\n\n";
@@ -1018,6 +1019,8 @@ namespace pyapp
         return "";
     }
 
+    void test( const V4& cazzo ) { cazzo.print(); }
+    
     void loadScript( const char * script )
     {
         pyrepl::load(pyrepl::curPath+script);
