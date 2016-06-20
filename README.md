@@ -4,15 +4,16 @@ Live reloading sandbox for PyColormotor.
 ![alt tag](https://raw.githubusercontent.com/colormotor/pycm_sandbox_gl/master/shot.jpg)
 
 ### Prerequisites
-First follow the installation instructions for 
+First generate the Colormotor Python bindings by following the instructions here:
+[https://github.com/colormotor/colormotor/tree/master/addons/pycolormotor](https://github.com/colormotor/colormotor/tree/master/addons/pycolormotor)
 
-- [Colormotor](https://github.com/colormotor/colormotor)
-- [PyColormotor] (https://github.com/colormotor/pycolormotor)
-
-To simplify the installation, place the repository directory at the same level as *colomotor* and *pycolormotor*. Then generate the sandbox binding code with:
+To simplify the installation, place the repository directory at the same level as *colomotor*. Then (from the *pycm_sandbox_gl* directory) generate the sandbox bindings with:
 
 ```
 sh swig.sh
 ```
-You can now compile and run the program.
+
+### Compiling
+#### OSX
+Open the XCode project and compile. If the code has been installed at the same directory level as *colormotor*, no modifications should be necessary.
 
