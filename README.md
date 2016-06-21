@@ -1,5 +1,5 @@
-# Colormotor Python Sandbox
-Live reloading sandbox for PyColormotor. 
+# Colormotor Sandbox
+Live reloading Python sandbox for Colormotor. 
 
 ![alt tag](https://raw.githubusercontent.com/colormotor/pycm_sandbox_gl/master/shot.jpg)
 
