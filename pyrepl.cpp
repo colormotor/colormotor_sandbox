@@ -18,7 +18,7 @@
 extern "C" 
 {
 void SWIG_init();
-}
+} 
 
 // Log function for redirecting stdout
 static PyObject* captureStdout(PyObject* self, PyObject* pArgs)
