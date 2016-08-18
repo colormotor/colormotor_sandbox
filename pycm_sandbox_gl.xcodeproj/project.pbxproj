@@ -55,6 +55,7 @@
 		D6218ADD1D14BF3C00481B0F /* console.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = console.h; sourceTree = "<group>"; };
 		D6218ADE1D159D9500481B0F /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		D622391C1CB9681D0029BA45 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D6FC4EA71D65048B0068EDAC /* modulePaths.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = modulePaths.txt; path = bin/modulePaths.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,6 +118,7 @@
 		D622391E1CB968230029BA45 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				D6FC4EA71D65048B0068EDAC /* modulePaths.txt */,
 				D6218ADC1D14BD8100481B0F /* app.h */,
 				D6218AD91D14680300481B0F /* app_wrap.cxx */,
 				D6218ADA1D14680300481B0F /* app_wrap.h */,

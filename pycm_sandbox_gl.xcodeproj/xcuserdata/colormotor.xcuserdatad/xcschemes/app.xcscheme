@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D60109FD1CB81B2100A3B426"
-               BuildableName = "feature_test"
+               BuildableName = "pycm_sandbox_gl"
                BlueprintName = "pycm_sandbox_gl"
                ReferencedContainer = "container:pycm_sandbox_gl.xcodeproj">
             </BuildableReference>
@@ -33,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D60109FD1CB81B2100A3B426"
-            BuildableName = "feature_test"
+            BuildableName = "pycm_sandbox_gl"
             BlueprintName = "pycm_sandbox_gl"
             ReferencedContainer = "container:pycm_sandbox_gl.xcodeproj">
          </BuildableReference>
@@ -53,7 +53,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D60109FD1CB81B2100A3B426"
-            BuildableName = "feature_test"
+            BuildableName = "pycm_sandbox_gl"
             BlueprintName = "pycm_sandbox_gl"
             ReferencedContainer = "container:pycm_sandbox_gl.xcodeproj">
          </BuildableReference>
@@ -72,7 +72,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D60109FD1CB81B2100A3B426"
-            BuildableName = "feature_test"
+            BuildableName = "pycm_sandbox_gl"
             BlueprintName = "pycm_sandbox_gl"
             ReferencedContainer = "container:pycm_sandbox_gl.xcodeproj">
          </BuildableReference>

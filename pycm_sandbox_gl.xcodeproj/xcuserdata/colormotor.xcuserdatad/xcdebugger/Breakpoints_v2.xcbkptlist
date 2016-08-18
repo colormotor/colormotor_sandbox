@@ -9,14 +9,14 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "../colormotor/addons/cmx_imgui_app/src/cm_imgui_app.cpp"
-            timestampString = "487900149.289142"
+            filePath = "../colormotor/src/cm_gfx.cpp"
+            timestampString = "488288630.494896"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "121"
-            endingLineNumber = "121"
-            landmarkName = "ImGui_ImplGlfw_GetClipboardText()"
-            landmarkType = "7">
+            startingLineNumber = "3832"
+            endingLineNumber = "3832"
+            landmarkName = "Image::updateTexture()"
+            landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
