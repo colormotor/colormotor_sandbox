@@ -68,7 +68,7 @@ void appExit()
 int main( int argc, char ** argv )
 {
     imguiApp( argc, argv,
-             "GUI Example",
+             "Colormotor Sandbox",
              1280 , 720,
              &appInit,
              &appExit,
