@@ -9,7 +9,7 @@
 #pragma once
 
 #include "colormotor.h"
-#include "Python/Python.h"
+#include "Python.h"
 #include "cm_params.h"
 #include "cm_imgui.h"
 
