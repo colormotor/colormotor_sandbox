@@ -64,7 +64,6 @@ struct PyEvent
     std::string name;
 };
 
-static std::vector<PyEvent> events;
 
 namespace pyrepl
 {
@@ -112,6 +111,16 @@ std::string getScriptName() { return scriptName; }
 int execute( const std::string & str )
 {
 	return PyRun_SimpleString(str.c_str());
+}
+
+int executef( const char * format, ... )
+{
+    char cmd[1000];
+    va_list	parameter;
+    va_start(parameter,format);
+    vsnprintf(cmd, 1000, format, parameter);
+    va_end(parameter);
+    return PyRun_SimpleString(cmd);
 }
 
 // executes interpreter style line
@@ -288,6 +297,66 @@ void resize( int w, int h )
     renderWidth = w; renderHeight = h;
 }
     
+std::string intToString( int v )
+{
+    std::stringstream s;
+    s << v;
+    return s.str();
+}
+
+std::string floatToString( float v )
+{
+    std::stringstream s;
+    s << v;
+    return s.str();
+}
+    
+void setupParamDict()
+{
+    PyRun_SimpleString("app.params={}");
+    static const char * bools[2] = {"False", "True"};
+    
+    for( int i = 0; i < scriptParams.getNumParams(); i++ )
+    {
+        Param * p = scriptParams.getParam(i);
+        switch (p->getType()) {
+            case PARAM_BOOL:
+            {
+                executef("app.params[\"%s\"]=%s", p->getName(), bools[(int)p->getBool()]);
+                break;
+            }
+                
+            case PARAM_INT:
+            {
+                executef("app.params[\"%s\"]=%s", p->getName(), intToString(p->getInt()).c_str());
+                break;
+            }
+                
+            case PARAM_FLOAT:
+            case PARAM_DOUBLE:
+            {
+                executef("app.params[\"%s\"]=%s", p->getName(), floatToString(p->getFloat()).c_str());
+                break;
+            }
+                
+            case PARAM_STRING:
+            {
+                executef("app.params[\"%s\"]=\"%s\"", p->getName(), p->getString());
+                break;
+            }
+                
+            case PARAM_COLOR:
+            {
+                V4 clr = p->getColor();
+                executef("app.params[\"%s\"]=np.array([%g, %g, %g, %g])", p->getName(), clr.x, clr.y, clr.z, clr.w);
+            }
+                
+            default:
+                break;
+        }
+    }
+}
+
 bool init()
 {
 	gfx::setManualGLRelease(true);
@@ -377,6 +446,7 @@ bool init()
 	// default import cm
 	PyRun_SimpleString("from cm import *\n");
 	PyRun_SimpleString("import app\n");
+    PyRun_SimpleString("import numpy as np");
 	// store old modules for full module reload
 	PyRun_SimpleString("oldmods = set(sys.modules.keys())");
     
@@ -453,6 +523,9 @@ void frame()
 	if( !active )
 		return;
 	
+    // Setup parameter dict
+    setupParamDict();
+    
     gfx::pushViewport();
     gfx::setViewport(0, appHeight() - pyapp::height(), pyapp::width(), pyapp::height());
     gfx::setOrtho(pyapp::width(), pyapp::height());
@@ -589,7 +662,8 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 		
 	PyRun_SimpleString("from cm import *\n");
 	PyRun_SimpleString("import app\n");
-	
+    PyRun_SimpleString("import numpy as np");
+    
 	if(PyRun_SimpleFile(PyFile_AsFile(PyFileObject), path.c_str()) != 0)
 	{
 		log("Could not execute file %s",path.c_str());
@@ -604,10 +678,12 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 		return false;
 	}
     
-    PyRun_SimpleString("app.run(App())\n");
+    // Hack we expose a 'self' variable to access app for debugging
+    PyRun_SimpleString("self = App()");
+    PyRun_SimpleString("app.run(self)\n");
     
 	log("Succesfully loaded file %s",path.c_str());
-
+    
     if(!failedToLoad)
     {
         //hasError = false;
@@ -624,7 +700,10 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
         log(xm.c_str());
         loadScriptParams(xm.c_str());
     }
-
+    
+    // Setup params
+    setupParamDict();
+    
 	// TODO Check for errors here as well
 	if(bInit)
     {
@@ -993,8 +1072,8 @@ namespace pyapp
     
 	Param* addEvent( const std::string & name, PyObject * func )
 	{
-		events.push_back(PyEvent());
-		PyEvent & e = events.back();
+        pyrepl::events.push_back(PyEvent());
+		PyEvent & e = pyrepl::events.back();
 		e.name = name;
 		e.func = func;
 		if( func )
@@ -1018,9 +1097,9 @@ namespace pyapp
 
 	bool isTriggered( const std::string & name )
 	{
-		for (int i = 0; i < events.size(); i++)
+		for (int i = 0; i < pyrepl::events.size(); i++)
 		{
-			PyEvent & e = events[i];
+			PyEvent & e = pyrepl::events[i];
 			if( e.name == name )
 				return e.event.isTriggered();
 		}
