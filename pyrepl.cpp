@@ -363,6 +363,8 @@ bool init()
 
 	std::vector<std::string> modulePaths;
 
+	printf("Setting Module Paths\n");
+
 	FILE * f = fopen("./modulePaths.txt","r");
 	if(f)
 	{
@@ -392,9 +394,19 @@ bool init()
 
 	// Set program name
 	Py_SetProgramName("PyREPL");
+	#ifdef PYTHON_HOME
+		Py_SetPythonHome(PYTHON_HOME);
+	#endif
+
+	printf("Initializing Python\n");
+	printf("Py_GetPythonHome(): \n%s", Py_GetPythonHome());
+	printf("Py_GetCopyright(): \n%s", Py_GetCopyright());
 	
 	// Initialize the Python interpreter.
 	Py_Initialize();
+
+	printf("Done\n");
+
 	// Swig bindings
 	initializeSwig_cm();
 	initializeSwig_app();
