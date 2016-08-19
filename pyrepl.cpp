@@ -68,7 +68,7 @@ struct PyEvent
 namespace pyrepl
 {
 
-static std::vector<PyEvent> events;
+static std::vector<PyEvent*> events;
 
 static int errStatus = 0;
 static bool mustReload = false;
@@ -155,8 +155,8 @@ static void print( const char *msg, ... )
 	vsnprintf( msgBuf, 1024, msg, va_alist );
 	va_end( va_alist );
 	msgBuf[1024 - 1] = '\0';
-    
-    printf(msgBuf);
+    assert(strlen(msgBuf) < 1024);
+    printf("%s", msgBuf);
 }
 
 static bool hasFileChanged()
@@ -466,12 +466,14 @@ void frame()
 	
 	for( int i = 0; i < events.size(); i++ )
 	{
-		PyEvent & e = events[i];
-		if(e.func && e.event.isTriggered())
+		PyEvent * e = events[i];
+        if(e->event.val != e->event.oldVal)
+            printf("Event %s: %d, %d\n", e->name.c_str(), (int)e->event.val, (int)e->event.oldVal);
+		if(e->func && e->event.isTriggered())
 		{
-			log("received event %s",e.name.c_str());
+			log("received event %s",e->name.c_str());
 			PyObject *arglist = Py_BuildValue("()");
-			PyObject *result = PyEval_CallObject(e.func, arglist);
+			PyObject *result = PyEval_CallObject(e->func, arglist);
 			// check for error
 			if( !result )
 			{
@@ -605,8 +607,9 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 	// remove events
 	for( int i = 0; i < events.size(); i++ )
 	{
-		if( events[i].func )
-			Py_DECREF(events[i].func);
+		if( events[i]->func )
+			Py_DECREF(events[i]->func);
+        delete events[i];
 	}
 	
 	events.clear();
@@ -1072,13 +1075,13 @@ namespace pyapp
     
 	Param* addEvent( const std::string & name, PyObject * func )
 	{
-        pyrepl::events.push_back(PyEvent());
-		PyEvent & e = pyrepl::events.back();
-		e.name = name;
-		e.func = func;
+        pyrepl::events.push_back(new PyEvent());
+		PyEvent * e = pyrepl::events.back();
+		e->name = name;
+		e->func = func;
 		if( func )
 			Py_INCREF(func);
-		return pyrepl::scriptParams.addEvent(name,e.event);
+		return pyrepl::scriptParams.addEvent(name,e->event);
 	}
 	
 	/*
@@ -1099,9 +1102,9 @@ namespace pyapp
 	{
 		for (int i = 0; i < pyrepl::events.size(); i++)
 		{
-			PyEvent & e = pyrepl::events[i];
-			if( e.name == name )
-				return e.event.isTriggered();
+			PyEvent * e = pyrepl::events[i];
+			if( e->name == name )
+				return e->event.isTriggered();
 		}
 		
 		pyrepl::log( "could not find event %s",name.c_str() );
