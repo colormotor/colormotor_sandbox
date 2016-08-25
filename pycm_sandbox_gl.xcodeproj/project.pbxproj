@@ -24,13 +24,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		D60109FC1CB81B2100A3B426 /* CopyFiles */ = {
+		D60109FC1CB81B2100A3B426 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 8;
 			dstPath = ./bin;
 			dstSubfolderSpec = 0;
 			files = (
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -139,7 +140,7 @@
 			buildPhases = (
 				D60109FA1CB81B2100A3B426 /* Sources */,
 				D60109FB1CB81B2100A3B426 /* Frameworks */,
-				D60109FC1CB81B2100A3B426 /* CopyFiles */,
+				D60109FC1CB81B2100A3B426 /* Copy Files */,
 				D69E366E1D17535D0032A925 /* ShellScript */,
 			);
 			buildRules = (
@@ -315,7 +316,6 @@
 					/usr/local/lib,
 					/Users/colormotor/develop/autograff2/colormotor/libs/armadillo/lib/osx,
 					/Users/colormotor/develop/autograff2/colormotor/libs/armadillo/lib/win32,
-					/Users/colormotor/develop/autograff2/colormotor/build,
 					/Users/colormotor/develop/autograff2/colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx,
 					../colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx,
 					../colormotor/addons/pycolormotor/modules,
@@ -361,7 +361,6 @@
 					/usr/local/lib,
 					/Users/colormotor/develop/autograff2/colormotor/libs/armadillo/lib/osx,
 					/Users/colormotor/develop/autograff2/colormotor/libs/armadillo/lib/win32,
-					/Users/colormotor/develop/autograff2/colormotor/build,
 					/Users/colormotor/develop/autograff2/colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx,
 					../colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx,
 					../colormotor/addons/pycolormotor/modules,
