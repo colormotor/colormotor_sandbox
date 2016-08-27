@@ -808,12 +808,12 @@ namespace pyapp
 {
 	double dt()
 	{
-        return appFrameTime();
+        return 0.001*appFrameTime();
 	}
 	
 	double frameMsecs()
 	{
-        return appFrameTime() * 1000;
+        return appFrameTime();
 	}
 
 	double fps()
