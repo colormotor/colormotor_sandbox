@@ -644,7 +644,7 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
     }
     
 	// Save script params if load was successful
-	if( curPath != "none" && reloadCount == 0 ) // Just save on successful load
+	if( curPath != "none" && reloadCount == 0 && !failedToLoad  ) // Just save on successful load
 	{
 		std::string xm = curPath + scriptName + ".xml";
 		saveScriptParams(xm.c_str());
