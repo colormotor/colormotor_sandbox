@@ -82,6 +82,7 @@ namespace pyapp
     cm::Param* addColor( const std::string & name, const arma::vec& clr );
 
     void addSeparator();
+    void newChild( const std::string& childName );
     //void addParams( const ParamList & params );
     
     bool isTriggered( const std::string & name );

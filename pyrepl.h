@@ -123,7 +123,9 @@ namespace cm
         Param* addBool( const std::string & name, bool val );
         Param* addColor( const std::string & name, const V4& clr );
         Param* addString( const std::string & name, const std::string & val );
-        
+        Param* addInt( const std::string& name, int val );
+
+        void newChild( const std::string& childName );
         void setParamPath( const char * path );
         void addSeparator();
         void addParams( const ParamList & params );

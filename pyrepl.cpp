@@ -311,50 +311,84 @@ std::string floatToString( float v )
     return s.str();
 }
     
-void setupParamDict()
+static std::vector<std::string> curChild;
+
+void pushChild( const std::string& childName )
 {
-    PyRun_SimpleString("app.params={}");
+	std::stringstream ss;
+	ss << curChild.back() << "[\"" << childName << "\"]";
+	curChild.push_back(ss.str());
+}
+
+void popChild()
+{
+	assert(curChild.size() > 1);
+	curChild.pop_back();
+}
+
+void addParamsToDict( ParamList* params )
+{
     static const char * bools[2] = {"False", "True"};
     
-    for( int i = 0; i < scriptParams.getNumParams(); i++ )
+	for( int i = 0; i < params->getNumParams(); i++ )
     {
-        Param * p = scriptParams.getParam(i);
+        Param * p = params->getParam(i);
         switch (p->getType()) {
             case PARAM_BOOL:
             {
-                executef("app.params[\"%s\"]=%s", p->getName(), bools[(int)p->getBool()]);
+                executef("%s[\"%s\"]=%s", curChild.back().c_str(), p->getName(), bools[(int)p->getBool()]);
                 break;
             }
                 
             case PARAM_INT:
             {
-                executef("app.params[\"%s\"]=%s", p->getName(), intToString(p->getInt()).c_str());
+                executef("%s[\"%s\"]=%s", curChild.back().c_str(), p->getName(), intToString(p->getInt()).c_str());
                 break;
             }
                 
             case PARAM_FLOAT:
             case PARAM_DOUBLE:
             {
-                executef("app.params[\"%s\"]=%s", p->getName(), floatToString(p->getFloat()).c_str());
+                executef("%s[\"%s\"]=%s", curChild.back().c_str(), p->getName(), floatToString(p->getFloat()).c_str());
                 break;
             }
                 
             case PARAM_STRING:
             {
-                executef("app.params[\"%s\"]=\"%s\"", p->getName(), p->getString());
+                executef("%s[\"%s\"]=\"%s\"", curChild.back().c_str(), p->getName(), p->getString());
                 break;
             }
                 
             case PARAM_COLOR:
             {
                 V4 clr = p->getColor();
-                executef("app.params[\"%s\"]=np.array([%g, %g, %g, %g])", p->getName(), clr.x, clr.y, clr.z, clr.w);
+                executef("%s[\"%s\"]=np.array([%g, %g, %g, %g])", curChild.back().c_str(), p->getName(), clr.x, clr.y, clr.z, clr.w);
             }
                 
             default:
                 break;
         }
     }
+
+    for( int i = 0; i < params->getNumChildren(); i++ )
+    {
+    	ParamList * child = params->getChild(i);
+    	std::string childName = child->name;
+        executef("%s[\"%s\"]={}", curChild.back().c_str(), childName.c_str());
+        pushChild(childName);
+    	addParamsToDict(child);
+    	popChild();
+    }
+}
+
+void setupParamDict()
+{
+    PyRun_SimpleString("app.params={}");
+    
+    // add first entry to child stack
+    curChild.clear();
+    curChild.push_back("app.params");
+    addParamsToDict(&scriptParams);
 }
 
 bool init()
@@ -977,9 +1011,28 @@ namespace pyapp
         return p;
 	}
 
+	Param* addInt( const std::string & name, int val )
+	{
+		Param * p = 0;
+		p = pyrepl::scriptParams.find(name);
+		if( p )
+		{
+			pyrepl::log("parameter %s allready there.....\n",name.c_str());
+			return p;
+		}
+		p = pyrepl::scriptParams.addInt(name,val);
+        return p;
+	}
+
+
 	void addSeparator()
 	{
 		pyrepl::scriptParams.addSpacer();
+	}
+
+	void newChild( const std::string& childName )
+	{
+		pyrepl::scriptParams.newChild(childName);
 	}
 		
 	Param* addBool( const std::string & name, bool val )
@@ -1096,6 +1149,7 @@ namespace pyapp
 		return pyrepl::scriptParams.addEvent(name,e->event);
 	}
 	
+
 	/*
     void setParamPath( const char * path )
     {
