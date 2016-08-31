@@ -17,6 +17,8 @@ public:
     bool showConsole=true;
     float paramWidth=300;
     
+    Trigger<bool> saveEps_;
+    
 	App()
 	:
 	AppModule("Main Module"),
@@ -25,6 +27,8 @@ public:
 		instance = this;
         params.addBool("Console",&showConsole);
         params.addFloat("paramWidth",&paramWidth,200,600)->noGui();
+        params.addEvent("Save EPS..",saveEps_);
+        
         params.loadXml(getExecutablePath()+"/settings.xml");
         std::string dt = binarize("basic_icons.ttf","icon_font");
         printf("%s",dt.c_str());
@@ -121,7 +125,20 @@ public:
         gfx::setBlendMode(gfx::BLENDMODE_ALPHA);
         gfx::color(1);
         pyrepl::resize(appWidth()-paramWidth, appHeight()-console.inputHeight);
+        
+        bool savingEps=false;
+        if(saveEps_.isTriggered())
+        {
+            std::string path;
+            if(saveFileDialog(path, "eps"))
+            {
+                gfx::beginEps(path, Box(0, 0, appWidth(), appHeight()));
+                savingEps = true;
+            }
+        }
         pyrepl::frame();
+        if(savingEps)
+            gfx::endEps();
 	}
 };
 
