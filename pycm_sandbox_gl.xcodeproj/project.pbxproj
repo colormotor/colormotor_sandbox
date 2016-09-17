@@ -319,6 +319,7 @@
 					/Users/colormotor/develop/autograff2/colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx,
 					../colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx,
 					../colormotor/addons/pycolormotor/modules,
+					"$(PROJECT_DIR)/bin",
 				);
 				OTHER_LDFLAGS = (
 					"-lopencv_core",
@@ -364,6 +365,7 @@
 					/Users/colormotor/develop/autograff2/colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx,
 					../colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx,
 					../colormotor/addons/pycolormotor/modules,
+					"$(PROJECT_DIR)/bin",
 				);
 				OTHER_LDFLAGS = (
 					"-lopencv_core",
