@@ -577,9 +577,15 @@ void frame()
     gfx::pushViewport();
     gfx::setViewport(0, appHeight() - pyapp::height(), pyapp::width(), pyapp::height());
     gfx::setOrtho(pyapp::width(), pyapp::height());
-	if(!callAppMethod("frame"))
+    if(!errStatus)
     {
-        errStatus = 1;
+        if(!callAppMethod("frame"))
+            errStatus = 1;
+    }
+    else
+//	if(!callAppMethod("frame"))
+    {
+        //errStatus = 1;
         // Hack, make sure we are not in an IMGUI Begin/End block
         ImGuiContext * ctx = ImGui::GetCurrentContext();
         while(ctx->CurrentWindowStack.Size > 1)
@@ -644,7 +650,7 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
     }
     
 	// Save script params if load was successful
-	if( curPath != "none" && reloadCount == 0 && !failedToLoad  ) // Just save on successful load
+	if( curPath != "none" && reloadCount == 0 && !failedToLoad && !errStatus  ) // Just save on successful load
 	{
 		std::string xm = curPath + scriptName + ".xml";
 		saveScriptParams(xm.c_str());
