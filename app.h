@@ -16,8 +16,13 @@ public:
     Console console;
     bool showConsole=true;
     float paramWidth=300;
-    
+
     Trigger<bool> saveEps_;
+    
+    bool capturing=false;
+    std::string capturePath;
+    int captureFrame=0;
+    Image captureImg;
     
 	App()
 	:
@@ -36,7 +41,9 @@ public:
     
     void replError( const std::string & buf )
     {
+        log_mutex.lock();
         console.log(buf.c_str());
+        log_mutex.unlock();
     }
     
     void replLog( const std::string & buf )
@@ -49,7 +56,39 @@ public:
         console.clear();
     }
     
+    void startCapture()
+    {
+        std::string path;
+        if(!openFolderDialog(path, "Select Capture Folder..."))
+        {
+            return;
+        }
+        
+        capturePath = path;
+        capturing = true;
+        captureFrame = 0;
+        captureImg = Image(appWidth()-paramWidth, appHeight()-console.inputHeight, Image::BGRA);
+    }
+    
+    void stopCapture()
+    {
+        capturing = false;
+    }
 
+    void capture()
+    {
+        if(!capturing)
+            return;
+        
+        captureImg.grabFrameBuffer();
+        std::stringstream ss;
+        ss << captureFrame << ".png";
+        std::string path = joinPath(capturePath, ss.str());
+        captureImg.save(path);
+        captureFrame++;
+        //grabFrameBuffer
+    }
+    
 	bool init()
 	{
         gfx::setManualGLRelease(true);
@@ -92,22 +131,57 @@ public:
         ImGui::BeginChild("content");
         
         imgui(params); // Creates a UI for the parameters
-        bool vis = ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_AllowOverlapMode); //, NULL, true, true);
+        
+        bool vis;
+        
+        // save frames
+        vis = ImGui::CollapsingHeader("Save Frames", ImGuiTreeNodeFlags_AllowOverlapMode); //, NULL, true, true);
+        if(vis)
+        {
+            if(capturing)
+            {
+                static bool on=true;
+                ImGui::Checkbox(" ",&on);
+                on = true;
+                
+                if(ImGui::Button("Stop Capture"))
+                {
+                    stopCapture();
+                }
+            }
+            else
+            {
+                if(ImGui::Button("Start Capture..."))
+                {
+                    startCapture();
+                }
+            }
+        }
+        
+        vis = ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_AllowOverlapMode); //, NULL, true, true);
         if(vis)
         {
             ImGui::Text("Framerate: %g", pyapp::fps());
             ImGui::Text("Script: %s", pyrepl::getScriptPath().c_str());
         }
         
+#ifdef OSC_ENABLED
+
+#endif
+        
+        
         pyrepl::gui();
         ImGui::EndChild();
         ImGui::End();
         
+        log_mutex.lock();
         // Console
         if(pyrepl::hasErrors())
             console.consoleOpen = true;
         
         console.draw(appWidth()-paramWidth, appHeight()/3);
+        log_mutex.unlock();
+        
 		return false;
 	}
     
@@ -115,6 +189,8 @@ public:
 	{
 		// Gets called every frame before render
 	}
+        
+    
 	
 	void render()
 	{
@@ -139,6 +215,8 @@ public:
         pyrepl::frame();
         if(savingEps)
             gfx::endEps();
+        
+        capture();
 	}
 };
 
