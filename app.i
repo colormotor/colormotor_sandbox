@@ -80,7 +80,8 @@ namespace pyapp
     cm::Param* addBool( const std::string & name, bool val );
     cm::Param* addString( const std::string & name, const std::string & val );
     cm::Param* addColor( const std::string & name, const arma::vec& clr );
-
+    cm::Param* addInt( const std::string& name, int val );
+    
     void addSeparator();
     void newChild( const std::string& childName );
     //void addParams( const ParamList & params );
