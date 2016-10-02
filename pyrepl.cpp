@@ -18,7 +18,9 @@
 extern "C" 
 {
 void SWIG_init();
-} 
+}
+
+std::mutex log_mutex;
 
 // Log function for redirecting stdout
 static PyObject* captureStdout(PyObject* self, PyObject* pArgs)
@@ -26,9 +28,12 @@ static PyObject* captureStdout(PyObject* self, PyObject* pArgs)
 	char* LogStr = NULL;
 	if (!PyArg_ParseTuple(pArgs, "s", &LogStr)) return NULL;
 	
+    log_mutex.lock();
     cm::pyrepl::log(LogStr);
+    log_mutex.unlock();
 	printf("> %s\n",LogStr);
-	
+    //log_mutex.unlock();
+    
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -242,12 +247,28 @@ bool loadScriptParams( const std::string & path )
 }
 
 void exit()
-{	
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    
+    #ifdef OSC_ENABLED
+        PyRun_SimpleString("print \"Closing OSC server\"\n");
+        PyRun_SimpleString("osc.close_server()\n");
+        PyRun_SimpleString("time.sleep(1.)\n");
+    #endif
+    
+    PyGILState_Release(gstate);
+    
+    Py_BEGIN_ALLOW_THREADS
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    Py_END_ALLOW_THREADS
+    
+        
 	std::string xm = curPath + scriptName + ".xml";
 	if( curPath != "none" )
 		scriptParams.saveXml(xm.c_str());
     params.saveXml(getExecutablePath() + "/repl.xml");
-    
+
 	if( watcher )
 		delete watcher;
 
@@ -437,6 +458,8 @@ bool init()
 	printf("Py_GetCopyright(): \n%s", Py_GetCopyright());
 	
 	// Initialize the Python interpreter.
+    PyEval_InitThreads();
+    
 	Py_Initialize();
 
 	printf("Done\n");
@@ -454,9 +477,13 @@ bool init()
 					   "class StdoutCatcher:\n"
 					   "\tdef write(self, str):\n"
 					   "\t\tlog.CaptureStdout(str)\n"
+                       "\tdef flush(self):\n"
+                       "\t\tpass\n\n"
 					   "class StderrCatcher:\n"
 					   "\tdef write(self, str):\n"
 					   "\t\tlog.CaptureStderr(str)\n"
+                       "\tdef flush(self):\n"
+                       "\t\tpass\n\n"
 					   "sys.stdout = StdoutCatcher()\n"
 					   "sys.stderr = StderrCatcher()\n"
 					   );
@@ -493,6 +520,22 @@ bool init()
 	PyRun_SimpleString("from cm import *\n");
 	PyRun_SimpleString("import app\n");
     PyRun_SimpleString("import numpy as np");
+    PyRun_SimpleString("import time");
+    
+#ifdef OSC_ENABLED
+    PyRun_SimpleString("print \"Importing OSC\"\n");
+    PyRun_SimpleString("import osc\n");
+    PyRun_SimpleString("app.set_osc_callback = osc.server.set_callback\n");
+    PyRun_SimpleString("app.set_osc_server_changed_callback = osc.server.set_server_changed_callback\n");
+    PyRun_SimpleString("app.send_osc = osc.client.send\n");
+    PyRun_SimpleString("print \"Initializing OSC\"\n");
+    
+    PyRun_SimpleString("osc.init_client(9999)\n");
+    PyRun_SimpleString("osc.init_server(7777)\n");
+    PyRun_SimpleString("osc.start_server()\n");
+    PyRun_SimpleString("print \"Started OSC\"\n");
+#endif
+    
 	// store old modules for full module reload
 	PyRun_SimpleString("oldmods = set(sys.modules.keys())");
     
@@ -509,7 +552,10 @@ void frame()
 	{
 	//	gfxCleanup();
 	}
-	
+    
+    PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
+    
 	for( int i = 0; i < events.size(); i++ )
 	{
 		PyEvent * e = events[i];
@@ -571,6 +617,9 @@ void frame()
 	if( !active )
 		return;
 	
+    
+    
+    //Py_BEGIN_ALLOW_THREADS
     // Setup parameter dict
     setupParamDict();
     
@@ -593,6 +642,16 @@ void frame()
     }
     gfx::popViewport();
     gfx::releaseGLObjects();
+    
+    PyGILState_Release(gstate);
+    
+    Py_BEGIN_ALLOW_THREADS
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    Py_END_ALLOW_THREADS
+//    
+//#ifdef OSC_ENABLED
+//    PyRun_SimpleString("osc.server.update()\n");
+//#endif
 
 }
 
