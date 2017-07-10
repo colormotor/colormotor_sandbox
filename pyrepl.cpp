@@ -57,7 +57,7 @@ static PyMethodDef logMethods[] = {
 	{NULL, NULL, 0, NULL}
 };
 
-
+//using namespace cm;
 namespace cm
 {
 
@@ -362,6 +362,7 @@ void addParamsToDict( ParamList* params )
             }
                 
             case PARAM_INT:
+            case PARAM_SELECTION:
             {
                 executef("%s[\"%s\"]=%s", curChild.back().c_str(), p->getName(), intToString(p->getInt()).c_str());
                 break;
@@ -1088,7 +1089,31 @@ namespace pyapp
 		p = pyrepl::scriptParams.addInt(name,val);
         return p;
 	}
+    
+    void setInt( const std::string & name, float v )
+	{
+		Param * p = pyrepl::scriptParams.find(name);
+		// also search local exposed params....
+		if( !p )
+			p = pyrepl::params.find(name);
+		
+		if( p )
+			p->setInt(v);	
+	}
 
+    Param* addSelection( const std::string& name, const std::vector<std::string>& selections, int val )
+    {
+        Param * p = 0;
+        p = pyrepl::scriptParams.find(name);
+        if( p )
+        {
+            pyrepl::log("parameter %s allready there.....\n",name.c_str());
+            return p;
+        }
+        p = pyrepl::scriptParams.addSelection(name, selections, val);
+        return p;
+    }
+    
 
 	void addSeparator()
 	{

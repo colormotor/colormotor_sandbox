@@ -119,6 +119,7 @@ namespace cm
         void setString( const std::string & name, const std::string & val );
         V4 getColor( const std::string & name );
         int getInt( const std::string & name );
+        void setInt( const std::string & name, float v );
         
         Param* addFloat( const std::string & name, float val, float min, float max, const std::string & widgetType = "SLIDER" );
         Param* addEvent( const std::string & name, PyObject * func = 0 );
@@ -127,7 +128,8 @@ namespace cm
         Param* addColor( const std::string & name, const V4& clr );
         Param* addString( const std::string & name, const std::string & val );
         Param* addInt( const std::string& name, int val );
-
+        Param* addSelection( const std::string& name, const std::vector<std::string>& selections, int val );
+        
         void newChild( const std::string& childName );
         void setParamPath( const char * path );
         void addSeparator();

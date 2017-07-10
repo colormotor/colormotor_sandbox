@@ -16,13 +16,12 @@
 #include "pyrepl.h"
 %} 
 %include "armanpy.i"
-%import "cm.i"
+%import "wrappers/py_cm.h"
 
 using namespace std;
 
 namespace cm
 {
-
 namespace pyapp
 {
 	enum
@@ -72,6 +71,7 @@ namespace pyapp
     std::string getString( const std::string & name );
     void setString( const std::string & name, const std::string & val );
     int getInt( const std::string & name );
+    void setInt( const std::string & name, float v );
     arma::vec getColor( const std::string & name );
 
     cm::Param* addFloat( const std::string & name, float val, float min, float max, const std::string & widgetType = "SLIDER" );
@@ -81,7 +81,8 @@ namespace pyapp
     cm::Param* addString( const std::string & name, const std::string & val );
     cm::Param* addColor( const std::string & name, const arma::vec& clr );
     cm::Param* addInt( const std::string& name, int val );
-    
+    cm::Param* addSelection( const std::string& name, const std::vector<std::string>& selections, int val );
+
     void addSeparator();
     void newChild( const std::string& childName );
     //void addParams( const ParamList & params );
@@ -98,5 +99,4 @@ namespace pyapp
     // Automatically called and used to hook to repl loop
 	void run(PyObject * args);
 }
-
 }

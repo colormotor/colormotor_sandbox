@@ -15,6 +15,6 @@ echo "void initializeSwig_app();" >> app_wrap.h
 echo "copying files"
 cp ./app.py ./bin/app.py
 rm -f ./bin/libpycm.dylib
-# cp ../colormotor/addons/pycolormotor/modules/libpycm.dylib ./bin/libpycm.dylib
+cp ../colormotor/addons/pycolormotor/modules/libpycm.dylib ./bin/libpycm.dylib
 rm -f ./bin/libpycm.so
-#cp ../colormotor/addons/pycolormotor/modules/libpycm.so ./bin/libpycm.so
+cp ../colormotor/addons/pycolormotor/modules/libpycm.so ./bin/libpycm.so
