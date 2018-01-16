@@ -5,9 +5,11 @@ set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/)
 
+set(CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "")
+
 find_package(Armadillo REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(OpenCV REQUIRED)
+#find_package(OpenCV REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 
@@ -29,9 +31,9 @@ include_directories(include
 	  ${PROJECT_SOURCE_DIR}/../colormotor/addons/cmx_params/src
 )
 
+#${PROJECT_SOURCE_DIR}/../../../lib/
 link_directories(
 	${PROJECT_SOURCE_DIR}/../colormotor/addons/pycolormotor/modules
-	${PROJECT_SOURCE_DIR}/../../../lib/
 )
 
 add_executable(colormotor_sandbox
@@ -42,30 +44,61 @@ add_executable(colormotor_sandbox
 
 
 if(APPLE)
+  set(PYTHON_BASE_DIR /Users/colormotor/miniconda2)
   set(ARMADILLO_LIBRARIES
 		${ARMADILLO_LIBRARIES}
 		lapack
 		blas)
 	
+  # Nifty trick from http://stackoverflow.com/questions/24174394/cmake-is-not-able-to-find-python-libraries
+
+  execute_process(COMMAND python -c "import sys; from distutils.sysconfig import get_python_inc; sys.stdout.write(get_python_inc())" OUTPUT_VARIABLE PYTHON_INCLUDE_DIRS)
+
+  execute_process(COMMAND python -c "import sys; import distutils.sysconfig as sysconfig; sys.stdout.write(sysconfig.get_config_var('LIBDIR'))" OUTPUT_VARIABLE PYTHON_LIBRARY_DIRS)
+
+  execute_process(COMMAND python -c "import sys; import distutils.sysconfig as sysconfig; sys.stdout.write(sysconfig.get_config_var('LDLIBRARY'))" OUTPUT_VARIABLE PYTHON_LIBRARIES)
+
+  # One more hack to setup PYTHONHOME for the interpreter... arghhh
+  execute_process(COMMAND python -c "import sys; import distutils.sysconfig as sysconfig; sys.stdout.write(sysconfig.get_config_var('exec_prefix'))" OUTPUT_VARIABLE PYTHON_HOME)
+  add_definitions(-DPYTHON_HOME="${PYTHON_HOME}")
+
+  set(linkdir ${PYTHON_BASE_DIR}/lib)
+  link_directories(
+    ${PYTHON_BASE_DIR}/lib
+  )
+
+  #${ARMADILLO_INCLUDE_DIRS}
   include_directories(
-    	  /usr/local/Frameworks/Python.framework/Headers
-		    /usr/local/lib/python2.7/site-packages/numpy/core/include/
-		    /usr/local/include
+    	  ${PYTHON_BASE_DIR}/lib/python2.7/site-packages/numpy/core/include/
+        ${PYTHON_BASE_DIR}/include
+        ${PYTHON_BASE_DIR}/include/python2.7
         ${PROJECT_SOURCE_DIR}/../colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx
-	      ${ARMADILLO_INCLUDE_DIRS}
         )
 
+  get_cmake_property(output link_directories)
+  message(STATUS ${linkdir}) 
+
+  #${PYTHON_BASE_DIR}/lib/libopencv_core.dylib
+  #${PYTHON_BASE_DIR}/lib/libopencv_imgproc.dylib
+  #${PYTHON_BASE_DIR}/lib/libopencv_highgui.dylib
+  #${PYTHON_BASE_DIR}/lib/libopencv_imgcodecs.dylib
+  #opencv_core
+  #opencv_imgproc
+  #opencv_highgui
+  #opencv_imgcodecs
+  
   target_link_libraries(colormotor_sandbox
-		opencv_core
-		opencv_imgproc
-		opencv_legacy
-		opencv_highgui
+    ${PYTHON_BASE_DIR}/lib/libopencv_core.dylib
+		${PYTHON_BASE_DIR}/lib/libopencv_imgproc.dylib
+		${PYTHON_BASE_DIR}/lib/libopencv_highgui.dylib
+		${PYTHON_BASE_DIR}/lib/libopencv_imgcodecs.dylib
+
 		armadillo
 		lapack
 		blas
 		glfw3
     pycm
-		/usr/local/Frameworks/Python.framework
+		${PYTHON_BASE_DIR}/lib/libpython2.7.dylib
 		"-framework CoreFoundation"
 		"-framework OpenGL"	
 		"-framework Cocoa"

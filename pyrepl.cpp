@@ -493,7 +493,7 @@ bool init()
 	// Add current to path
 	std::string pp = getCurrentDirectory();
 	std::string syspath;
-	syspath += "import sys\n";
+	syspath += "import os, sys\n";
     syspath += "sys.dont_write_bytecode = True\n";
 	syspath += "sys.path.append(\'";
 	syspath += pp;
@@ -513,6 +513,7 @@ bool init()
     // startup file
     if(fileExists(getExecutablePath() + "/startup.py"))
     {
+		printf("Loading startup script\n");
         std::string s = stringFromFile(getExecutablePath() + "/startup.py");
         PyRun_SimpleString(s.c_str());
     }
@@ -755,8 +756,13 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 	}
 			
     if(reloadModules)
-        PyRun_SimpleString("for mod in set(sys.modules.keys()).difference(oldmods): sys.modules.pop(mod)");
-	
+	{
+		const char* cmd = "remods=[]\n"
+						  "for mod in set(sys.modules.keys()).difference(oldmods): remods.append(mod)\n"
+						  "for mod in remods: sys.modules.pop(mod)";
+		PyRun_SimpleString(cmd);
+        //PyRun_SimpleString("for mod in set(sys.modules.keys()).difference(oldmods): sys.modules.pop(mod)");
+	}
 	PyObject* PyFileObject = PyFile_FromString((char*)path.c_str(), "r"); 
 	
 	std::string chdir = "import os\n";
