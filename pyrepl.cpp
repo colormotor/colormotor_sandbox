@@ -419,6 +419,20 @@ bool init()
 
 	std::vector<std::string> modulePaths;
 
+	printf("********* Reading colormotor base path\n");
+	{
+		char* cmpath = getenv("COLORMOTOR_PATH");
+		if(!cmpath)
+		{
+			printf("Could not read COLORMOTOR_PATH\n");
+		}
+		else
+		{
+			modulePaths.push_back(std::string(cmpath) +
+			"/addons/pycolormotor/modules");
+		}
+	}
+	
 	printf("Setting Module Paths\n");
 
 	FILE * f = fopen("./modulePaths.txt","r");

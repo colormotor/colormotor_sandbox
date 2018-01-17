@@ -7,7 +7,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/)
 
 set(CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "")
 
-find_package(Armadillo REQUIRED)
+#find_package(Armadillo REQUIRED)
 find_package(PkgConfig REQUIRED)
 #find_package(OpenCV REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -44,7 +44,7 @@ add_executable(colormotor_sandbox
 
 
 if(APPLE)
-  set(PYTHON_BASE_DIR /Users/colormotor/miniconda2)
+  set(PYTHON_BASE_DIR $ENV{HOME}/miniconda2)
   set(ARMADILLO_LIBRARIES
 		${ARMADILLO_LIBRARIES}
 		lapack
@@ -72,7 +72,6 @@ if(APPLE)
     	  ${PYTHON_BASE_DIR}/lib/python2.7/site-packages/numpy/core/include/
         ${PYTHON_BASE_DIR}/include
         ${PYTHON_BASE_DIR}/include/python2.7
-        ${PROJECT_SOURCE_DIR}/../colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx
         )
 
   get_cmake_property(output link_directories)
@@ -92,11 +91,10 @@ if(APPLE)
 		${PYTHON_BASE_DIR}/lib/libopencv_imgproc.dylib
 		${PYTHON_BASE_DIR}/lib/libopencv_highgui.dylib
 		${PYTHON_BASE_DIR}/lib/libopencv_imgcodecs.dylib
-
-		armadillo
+		${PYTHON_BASE_DIR}/lib/libarmadillo.dylib
 		lapack
 		blas
-		glfw3
+		glfw
     pycm
 		${PYTHON_BASE_DIR}/lib/libpython2.7.dylib
 		"-framework CoreFoundation"
