@@ -24,16 +24,42 @@ public:
     int captureFrame=0;
     Image captureImg;
     
+    struct
+    {
+        V4 col_text;
+        V4 col_main;
+        V4 col_back;
+        V4 col_area;
+    } uiColors;
+
 	App()
 	:
 	AppModule("Main Module"),
     params("Settings")
 	{
+        int hue = 140;
+        float col_main_sat = 180.f/255.f;
+        float col_main_val = 161.f/255.f;
+        float col_area_sat = 124.f/255.f;
+        float col_area_val = 100.f/255.f;
+        float col_back_sat = 59.f/255.f;
+        float col_back_val = 40.f/255.f;
+
+        uiColors.col_text = (ImVec4)ImColor::HSV(hue/255.f,  20.f/255.f, 235.f/255.f);
+        uiColors.col_main = (ImVec4)ImColor::HSV(hue/255.f, col_main_sat, col_main_val);
+        uiColors.col_back = (ImVec4)ImColor::HSV(hue/255.f, col_back_sat, col_back_val);
+        uiColors.col_area = (ImVec4)ImColor::HSV(hue/255.f, col_area_sat, col_area_val);
+
 		instance = this;
         params.addBool("Console",&showConsole);
         params.addFloat("paramWidth",&paramWidth,200,600)->noGui();
         params.addEvent("Save EPS..",saveEps_);
-        
+        params.newChild("UI Colors");
+        params.addColor("text", &uiColors.col_text);
+        params.addColor("main", &uiColors.col_main);
+        params.addColor("back", &uiColors.col_back);
+        params.addColor("area", &uiColors.col_area);
+
         params.loadXml(getExecutablePath()+"/settings.xml");
         std::string dt = binarize("basic_icons.ttf","icon_font");
         printf("%s",dt.c_str());
@@ -48,7 +74,9 @@ public:
     
     void replLog( const std::string & buf )
     {
+        //log_mutex.lock();
         console.log(buf.c_str());
+        //log_mutex.unlock();
     }
     
     void replReload()
@@ -105,18 +133,25 @@ public:
 
 	void exit()
 	{
-        pyrepl::exit();
         params.saveXml(getExecutablePath()+"/settings.xml");
+        pyrepl::exit();
 	}
 
 	bool gui()
 	{
+        //static bool opendemo=true;
+        //ImGui::ShowDemoWindow(&opendemo);
+        //return false;
+        ImGui::SetupStyle(  uiColors.col_text,
+                            uiColors.col_main,
+                            uiColors.col_back,
+                            uiColors.col_area);
         // Resizable settings UI on the side
         static bool show=true;
-        ImVec2 size = ImVec2(paramWidth,appHeight());
+        ImVec2 size = ImVec2(paramWidth, appHeight());
         ImGui::SetNextWindowSize(size);
         ImGui::SetNextWindowPos(ImVec2(appWidth()-paramWidth,0));
-        ImGui::Begin("COLORMOTOR",&show, size, -1.0f, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings);
+        ImGui::Begin("COLORMOTOR", &show, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings);
         ImGui::Button("<",ImVec2(5,appHeight()-10));
         if(ImGui::IsItemActive())
         {
@@ -128,14 +163,16 @@ public:
                 paramWidth = 200;
         }
         ImGui::SameLine();
-        ImGui::BeginChild("content");
+
         
+        ImGui::BeginChild("content");
         imgui(params); // Creates a UI for the parameters
+        
         
         bool vis;
         
         // save frames
-        vis = ImGui::CollapsingHeader("Save Frames", ImGuiTreeNodeFlags_AllowOverlapMode); //, NULL, true, true);
+        vis = ImGui::CollapsingHeader("Save Frames", ImGuiTreeNodeFlags_AllowItemOverlap); //, NULL, true, true);
         if(vis)
         {
             if(capturing)
@@ -158,7 +195,7 @@ public:
             }
         }
         
-        vis = ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_AllowOverlapMode); //, NULL, true, true);
+        vis = ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_AllowItemOverlap); //, NULL, true, true);
         if(vis)
         {
             ImGui::Text("Framerate: %g", pyapp::fps());

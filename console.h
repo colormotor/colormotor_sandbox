@@ -45,9 +45,8 @@ struct Console
         scrollToBottom = true;
     }
     
-    void    log(const char* fmt, ...) IM_PRINTFARGS(2)
-    {
-        
+    void    log(const char* fmt, ...) IM_FMTARGS(2)
+    { 
         char buf[1024];
         va_list args;
         va_start(args, fmt);
@@ -62,29 +61,36 @@ struct Console
     {
         float H = ImGui::GetIO().DisplaySize.y;
         
-        ImVec2 size = ImVec2(width,height);
-        ImGui::SetNextWindowSize(size);
-        if(consoleOpen)
-        {
-            ImGui::SetNextWindowPos(ImVec2(0,H-inputHeight-height));
-        }
-        else
-        {
-            ImGui::SetNextWindowPos(ImVec2(0,H-inputHeight));
-        }
+        
+        // if(consoleOpen)
+        // {
+            
+        // }
+        // else
+        // {
+        //     ImGui::SetNextWindowPos(ImVec2(0,H-inputHeight));
+        // }
         
         static ImGuiTextFilter filter;
         
+        ImVec2 size = ImVec2(width,height);
         if(consoleOpen)
         {
-            ImGui::Begin("console",&consoleOpen, size, 0.5f, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings );
+            ImGui::SetNextWindowPos(ImVec2(0,H-inputHeight-height));
+            ImGui::SetNextWindowSize(size, ImGuiCond_Always);
+            ImGui::SetNextWindowBgAlpha(0.5);
+            ImGui::Begin("console", &consoleOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings );
             
             //ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar|
             //ImGuiWindowFlags_NoScrollbar
             
-            
+            // ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0,0));
+            // static ImGuiTextFilter filter;
+            // filter.Draw("Filter (\"incl,-excl\") (\"error\")", 180);
+            // ImGui::PopStyleVar();
+            // ImGui::Separator();
             /*
-            ImGui::BeginChild("ScrollingRegion", ImVec2(0,-ImGui::GetItemsLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("ScrollingRegion", ImVec2(0,-ImGui::GetFrameHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
             */
             // Display every line as a separate entry so we can change their color or add custom widgets. If you only want raw text you can use ImGui::TextUnformatted(log.begin(), log.end());
             // NB- if you have thousands of entries this approach may be too inefficient and may require user-side clipping to only process visible items.
@@ -120,10 +126,11 @@ struct Console
         
         // Input line
         size = ImVec2(width,inputHeight);
-        ImGui::SetNextWindowPos(ImVec2(0,H-inputHeight));
-        ImGui::SetNextWindowSize(size);
+        ImGui::SetNextWindowPos(ImVec2(0,H-inputHeight), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(size, ImGuiCond_Always);
+        ImGui::SetNextWindowBgAlpha(1.);
         static bool p_open = true;
-        ImGui::Begin("console input",&p_open, size, 1.0f, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings);
+        ImGui::Begin("console input",&p_open, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings);
         
         if(ImGui::IconSelectable("e",consoleOpen))
             consoleOpen = !consoleOpen;
@@ -144,7 +151,7 @@ struct Console
         }
         
         // Demonstrate keeping auto focus on the input box
-        if (ImGui::IsItemHovered() || (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
+        if (ImGui::IsItemHovered() || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
             ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
         
         ImGui::PopItemWidth();
@@ -163,92 +170,7 @@ struct Console
         ImGui::SameLine();
         if (ImGui::SmallButton("Bottom")) scrollToBottom = true;
         //static float t = 0.0f; if (ImGui::GetTime() - t > 0.02f) { t = ImGui::GetTime(); log("Spam %f", t); }
-        
-        
-        
-        
-        ImGui::End();
-    }
 
-    
-    void    draw_old(const char* title, bool* p_open)
-    {
-        ImGui::SetNextWindowSize(ImVec2(520,600), ImGuiSetCond_FirstUseEver);
-        if (!ImGui::Begin(title, p_open))
-        {
-            ImGui::End();
-            return;
-        }
-        
-//        ImGui::TextWrapped("This example implements a console with basic coloring, completion and history. A more elaborate implementation may want to store entries along with extra data such as timestamp, emitter, etc.");
-//        ImGui::TextWrapped("Enter 'HELP' for help, press TAB to use text completion.");
-        
-        // TODO: display items starting from the bottom
-        
-        if (ImGui::SmallButton("Clear")) clear(); ImGui::SameLine();
-        if (ImGui::SmallButton("Scroll to bottom")) scrollToBottom = true;
-        //static float t = 0.0f; if (ImGui::GetTime() - t > 0.02f) { t = ImGui::GetTime(); log("Spam %f", t); }
-        
-        ImGui::Separator();
-        
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0,0));
-        static ImGuiTextFilter filter;
-        filter.Draw("Filter (\"incl,-excl\") (\"error\")", 180);
-        ImGui::PopStyleVar();
-        ImGui::Separator();
-        
-        ImGui::BeginChild("ScrollingRegion", ImVec2(0,-ImGui::GetItemsLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
-        if (ImGui::BeginPopupContextWindow())
-        {
-            if (ImGui::Selectable("Clear")) clear();
-            ImGui::EndPopup();
-        }
-        
-        // Display every line as a separate entry so we can change their color or add custom widgets. If you only want raw text you can use ImGui::TextUnformatted(log.begin(), log.end());
-        // NB- if you have thousands of entries this approach may be too inefficient and may require user-side clipping to only process visible items.
-        // You can seek and display only the lines that are visible using the ImGuiListClipper helper, if your elements are evenly spaced and you have cheap random access to the elements.
-        // To use the clipper we could replace the 'for (int i = 0; i < items.Size; i++)' loop with:
-        //     ImGuiListClipper clipper(items.Size);
-        //     while (clipper.Step())
-        //         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-        // However take note that you can not use this code as is if a filter is active because it breaks the 'cheap random-access' property. We would need random-access on the post-filtered list.
-        // A typical application wanting coarse clipping and filtering may want to pre-compute an array of indices that passed the filtering test, recomputing this array when user changes the filter,
-        // and appending newly elements as they are inserted. This is left as a task to the user until we can manage to improve this example code!
-        // If your items are of variable size you may want to implement code similar to what ImGuiListClipper does. Or split your data into fixed height items to allow random-seeking into your list.
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4,1)); // Tighten spacing
-        for (int i = 0; i < items.Size; i++)
-        {
-            const char* item = items[i];
-            if (!filter.PassFilter(item))
-                continue;
-            ImVec4 col = ImVec4(1.0f,1.0f,1.0f,1.0f); // A better implementation may store a type per-item. For the sample let's just parse the text.
-            if (strstr(item, "[error]") || strstr(item, "Traceback")) col = ImColor(1.0f,0.4f,0.4f,1.0f);
-            else if (strncmp(item, "# ", 2) == 0) col = ImColor(1.0f,0.78f,0.58f,1.0f);
-            ImGui::PushStyleColor(ImGuiCol_Text, col);
-            ImGui::TextUnformatted(item);
-            ImGui::PopStyleColor();
-        }
-        if (scrollToBottom)
-            ImGui::SetScrollHere();
-        scrollToBottom = false;
-        ImGui::PopStyleVar();
-        ImGui::EndChild();
-        ImGui::Separator();
-        
-        // Command-line
-        if (ImGui::InputText("Eval", inputBuf, ARRAYSIZE(inputBuf), ImGuiInputTextFlags_EnterReturnsTrue|ImGuiInputTextFlags_CallbackCompletion|ImGuiInputTextFlags_CallbackHistory, &textEditCallbackStub, (void*)this))
-        {
-            char* input_end = inputBuf+strlen(inputBuf);
-            while (input_end > inputBuf && input_end[-1] == ' ') input_end--; *input_end = 0;
-            if (inputBuf[0])
-                execCommand(inputBuf);
-            strcpy(inputBuf, "");
-        }
-        
-        // Demonstrate keeping auto focus on the input box
-        if (ImGui::IsItemHovered() || (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
-            ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
-        
         ImGui::End();
     }
     
@@ -256,6 +178,7 @@ struct Console
     {
         log("# %s\n", command_line);
         consoleOpen = true;
+
         // Insert into history. First find match and delete it so it can be pushed to the back. This isn't trying to be smart or optimal.
         historyPos = -1;
         for (int i = history.Size-1; i >= 0; i--)
@@ -266,7 +189,7 @@ struct Console
                 break;
             }
         history.push_back(Strdup(command_line));
-        
+
         cm::pyrepl::executeAndPrint(command_line);
     }
     
@@ -278,13 +201,13 @@ struct Console
     
     int     textEditCallback(ImGuiTextEditCallbackData* data)
     {
-        //log("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
+        //AddLog("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
         switch (data->EventFlag)
         {
-            case ImGuiInputTextFlags_CallbackCompletion:
+        case ImGuiInputTextFlags_CallbackCompletion:
             {
                 // Example of TEXT COMPLETION
-                
+
                 // Locate beginning of current word
                 const char* word_end = data->Buf + data->CursorPos;
                 const char* word_start = word_end;
@@ -295,13 +218,13 @@ struct Console
                         break;
                     word_start--;
                 }
-                
+
                 // Build a list of candidates
                 ImVector<const char*> candidates;
                 for (int i = 0; i < commands.Size; i++)
                     if (Strnicmp(commands[i], word_start, (int)(word_end-word_start)) == 0)
                         candidates.push_back(commands[i]);
-                
+
                 if (candidates.Size == 0)
                 {
                     // No match
@@ -325,28 +248,28 @@ struct Console
                         for (int i = 0; i < candidates.Size && all_candidates_matches; i++)
                             if (i == 0)
                                 c = toupper(candidates[i][match_len]);
-                            else if (c != toupper(candidates[i][match_len]))
+                            else if (c == 0 || c != toupper(candidates[i][match_len]))
                                 all_candidates_matches = false;
                         if (!all_candidates_matches)
                             break;
                         match_len++;
                     }
-                    
+
                     if (match_len > 0)
                     {
                         data->DeleteChars((int)(word_start - data->Buf), (int)(word_end-word_start));
                         data->InsertChars(data->CursorPos, candidates[0], candidates[0] + match_len);
                     }
-                    
+
                     // List matches
                     log("Possible matches:\n");
                     for (int i = 0; i < candidates.Size; i++)
                         log("- %s\n", candidates[i]);
                 }
-                
+
                 break;
             }
-            case ImGuiInputTextFlags_CallbackHistory:
+        case ImGuiInputTextFlags_CallbackHistory:
             {
                 // Example of HISTORY
                 const int prev_history_pos = historyPos;
@@ -363,7 +286,7 @@ struct Console
                         if (++historyPos >= history.Size)
                             historyPos = -1;
                 }
-                
+
                 // A better implementation would preserve the data on the current input line along with cursor position.
                 if (prev_history_pos != historyPos)
                 {

@@ -16,7 +16,11 @@
 #include "pyrepl.h"
 %} 
 %include "armanpy.i"
-%import "wrappers/py_cm.h"
+%include "wrappers/py_cm.h"
+
+%template(StringVector) std::vector<std::string>;
+%template(ConstCharVector) std::vector<const char*>;
+
 
 using namespace std;
 

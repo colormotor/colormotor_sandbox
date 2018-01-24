@@ -28,9 +28,9 @@ static PyObject* captureStdout(PyObject* self, PyObject* pArgs)
 	char* LogStr = NULL;
 	if (!PyArg_ParseTuple(pArgs, "s", &LogStr)) return NULL;
 	
-    log_mutex.lock();
+    //log_mutex.lock();
     cm::pyrepl::log(LogStr);
-    log_mutex.unlock();
+    //log_mutex.unlock();
 	printf("> %s\n",LogStr);
     //log_mutex.unlock();
     
@@ -564,6 +564,10 @@ bool init()
 
 void frame()
 {
+	//gfx::clear(1,1,1,1);
+	gfx::setBlendMode(gfx::BLENDMODE_ALPHA);
+	//return;
+
 	// cleanup any gfx objects that need to be deleted
 	{
 	//	gfxCleanup();
@@ -652,6 +656,7 @@ void frame()
     {
         //errStatus = 1;
         // Hack, make sure we are not in an IMGUI Begin/End block
+		
         ImGuiContext * ctx = ImGui::GetCurrentContext();
         while(ctx->CurrentWindowStack.Size > 1)
             ctx->CurrentWindowStack.pop_back();
@@ -760,7 +765,7 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 		if( lastScript != path || !watcher )
 		{
 			SAFE_DELETE(watcher);
-			watcher = new FileWatcher( path , 200 );
+			watcher = new FileWatcher( path, 200 ); 
 		}
 		failedToLoad = false;
 		lastScript = path;
