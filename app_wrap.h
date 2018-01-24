@@ -1,0 +1,1 @@
+void initializeSwig_app();
