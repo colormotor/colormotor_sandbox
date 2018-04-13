@@ -11,7 +11,7 @@ set(CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "")
 
 #find_package(OpenCV REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
+#find_package(GLEW REQUIRED)
 
 #find_library(GLFW3_LIB glfw3 ${PROJECT_SOURCE_DIR}/../../../addons/cmx_imgui_app/src/glfw3/lib/linux)
 
@@ -96,7 +96,6 @@ if(APPLE)
 		blas
 		${PYTHON_BASE_DIR}/lib/libglfw.dylib
     pycm
-    fswatch
 		${PYTHON_BASE_DIR}/lib/libpython2.7.dylib
 		"-framework CoreFoundation"
 		"-framework OpenGL"	
@@ -114,7 +113,7 @@ elseif(UNIX)
   #pkg_search_module(PYTHON REQUIRED python>=2.6)
   #find_package(PythonLibs)
   find_package(PkgConfig REQUIRED)
-  
+
   # Nifty trick from http://stackoverflow.com/questions/24174394/cmake-is-not-able-to-find-python-libraries
 
   execute_process(COMMAND python -c "import sys; from distutils.sysconfig import get_python_inc; sys.stdout.write(get_python_inc())" OUTPUT_VARIABLE PYTHON_INCLUDE_DIRS)
