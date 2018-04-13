@@ -96,6 +96,7 @@ if(APPLE)
 		blas
 		glfw
     pycm
+    fswatch
 		${PYTHON_BASE_DIR}/lib/libpython2.7.dylib
 		"-framework CoreFoundation"
 		"-framework OpenGL"	

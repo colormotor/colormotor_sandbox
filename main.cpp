@@ -45,9 +45,9 @@ void appRender( float w, float h )
 {
     modules[curModule]->update();
 
-    gfx::clear(0.2,0.2,0.2,1.0);
-    gfx::enableDepthBuffer(false);
-    gfx::setOrtho(w,h);
+    //gfx::clear(0.2,0.2,0.2,1.0);
+    //gfx::enableDepthBuffer(false);
+    //gfx::setOrtho(w,h);
 
     modules[curModule]->render();
 }

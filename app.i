@@ -49,6 +49,8 @@ namespace pyapp
     double frameMsecs();
     double fps();
 
+    std::string name();
+
     float width();
     float height();
     float mouseX();
@@ -61,6 +63,9 @@ namespace pyapp
     arma::vec center();
     arma::vec size();
     
+    /// Used to set description of app in UI
+    void desc( const std::string& str );
+
     bool keyPressed( int k );
     bool keyReleased( int k );
     bool mouseDown( int i );

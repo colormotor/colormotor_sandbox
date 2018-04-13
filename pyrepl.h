@@ -92,6 +92,8 @@ namespace cm
         double frameMsecs();
         double fps();
         
+        std::string name();
+        
         float width();
         float height();
         float mouseX();
@@ -110,6 +112,9 @@ namespace cm
         bool mouseReleased( int i );
         bool mouseDoubeClicked( int i );
         
+        /// Used to set description of app in UI
+        void desc( const std::string& str );
+
         void test( const cm::V4& cazzo );
         void setFloat( const std::string & name, float v );
         float getFloat( const std::string & name );

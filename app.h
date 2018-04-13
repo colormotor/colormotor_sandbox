@@ -233,7 +233,8 @@ public:
 	{
         float w = appWidth();
         float h = appHeight();
-        gfx::clear(0,0,0,0);
+        if(!pyrepl::hasErrors())
+            gfx::clear(0,0,0,0);
         gfx::setOrtho(w,h);
         gfx::setBlendMode(gfx::BLENDMODE_ALPHA);
         gfx::color(1);

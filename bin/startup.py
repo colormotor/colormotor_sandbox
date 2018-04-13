@@ -4,14 +4,66 @@ import numpy as np
 import scipy as sp
 import os
 import sys
+sys.argv = ['colormotor_sandbox']
 
 # NetworkX seems to be necessary for reload issues
-print("loading networkx and matplotlib")
-import networkx as nx
-import networkx
-#import matplotlib
-print("loading tensorflow")
-import tensorflow as tf
+print("preloading modules")
+try:
+    import networkx as nx
+    import networkx
+except:
+    print('Networkx not available')
 
+try:
+    # Something really wrong going on when using anaconda, reload modules in pyrepl doesnt work properly.
+    import matplotlib
+except:
+    print('Matplotlib not available')
+
+try:
+    #print("loading tensorflow")
+    import tensorflow as tf
+except:
+    print('Tensorflow not available')
+
+oldmods = set(sys.modules.keys())
+
+def reload_modules():
+    remods = []
+    for mod in set(sys.modules.keys()).difference(oldmods):
+        if 'matplotlib' in mod:
+            continue
+        if 'numpy' in mod:
+            continue
+        if 'scipy' in mod:
+            continue
+        if 'sklearn' in mod:
+            continue
+        remods.append(mod)
+    for mod in remods:
+        sys.modules.pop(mod)
+
+def brk():
+    ''' Debug utility
+        Can insert this in a script to create a fake breakpoint
+        all local variables will be accessible under the namespace dbg.
+    '''
+    import inspect
+    import traceback
+    global dbg
+    class Dbg(object):
+        def __init__(self, locs):
+            for k,v in locs.items():
+                self.__dict__[k] = v
+                
+    frame = inspect.currentframe()
+    try:
+        print('breaking')
+        traceback.print_stack()
+        print(frame.f_back.f_locals)
+        dbg = Dbg(frame.f_back.f_locals)
+        raise ValueError
+    finally:
+        del frame
 
 print("Success.")
