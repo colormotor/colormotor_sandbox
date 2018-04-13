@@ -703,7 +703,7 @@ void gui()
 		}
 	}
 	
-	callAppMethod("gui", true); // optional call
+	//callAppMethod("gui", true); // optional call
 
     imgui(scriptParams);
 }
