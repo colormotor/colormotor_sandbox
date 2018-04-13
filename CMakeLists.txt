@@ -94,7 +94,7 @@ if(APPLE)
 		${PYTHON_BASE_DIR}/lib/libarmadillo.dylib
 		lapack
 		blas
-		glfw
+		${PYTHON_BASE_DIR}/lib/libglfw.dylib
     pycm
     fswatch
 		${PYTHON_BASE_DIR}/lib/libpython2.7.dylib
