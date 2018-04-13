@@ -1,0 +1,10 @@
+<Params name="PyREPL">
+    <Params>
+        <var type="EVENT" name="load...">0</var>
+        <var type="EVENT" name="reload">0</var>
+        <var type="EVENT" name="duplicate...">0</var>
+        <var type="BOOL" name="reload modules">1</var>
+        <var type="STRING" name="last script">/Users/user/graffitype/python/demos/interactive_demos/interwine_tests/interwine_test_basic_01.py</var>
+    </Params>
+    <Children/>
+</Params>

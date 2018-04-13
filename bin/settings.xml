@@ -1,0 +1,18 @@
+<Params name="Settings">
+    <Params>
+        <var type="BOOL" name="Console">1</var>
+        <var type="FLOAT" name="paramWidth">300</var>
+        <var type="EVENT" name="Save EPS..">0</var>
+    </Params>
+    <Children>
+        <Params name="UI Colors">
+            <Params>
+                <var type="COLOR" name="text">0.849289 0.90031 0.921569 1</var>
+                <var type="COLOR" name="main">0.185698 0.500292 0.631373 1</var>
+                <var type="COLOR" name="back">0.120569 0.146188 0.156863 1</var>
+                <var type="COLOR" name="area">0.201461 0.33607 0.392157 1</var>
+            </Params>
+            <Children/>
+        </Params>
+    </Children>
+</Params>
