@@ -425,6 +425,8 @@ bool init()
 		if(!cmpath)
 		{
 			printf("Could not read COLORMOTOR_PATH\n");
+			printf("Assuming: ./../../colormotor/addons/pycolormotor/modules");
+			modulePaths.push_back("./../../colormotor/addons/pycolormotor/modules");
 		}
 		else
 		{
@@ -516,9 +518,9 @@ bool init()
 	// add extra module paths
 	for( int i = 0; i < modulePaths.size(); i++ )
 	{
-		syspath += "sys.path.append(\'";
+		syspath += "sys.path.append(os.path.abspath(\'";
 		syspath += modulePaths[i];
-		syspath += "\')\n";
+		syspath += "\'))\n";
 	}
 	
 	printf("%s",syspath.c_str());

@@ -44,7 +44,7 @@ add_executable(colormotor_sandbox
 
 
 if(APPLE)
-  set(PYTHON_BASE_DIR $ENV{HOME}/miniconda2)
+  set(PYTHON_BASE_DIR $ENV{HOME}/anaconda3/envs/py27)
   set(ARMADILLO_LIBRARIES
 		${ARMADILLO_LIBRARIES}
 		lapack
