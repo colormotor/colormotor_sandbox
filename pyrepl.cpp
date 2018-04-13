@@ -73,6 +73,8 @@ struct PyEvent
 namespace pyrepl
 {
 
+static std::string app_desc = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+
 static std::vector<PyEvent*> events;
 
 static int errStatus = 0;
@@ -296,10 +298,17 @@ std::string absolutPath( const std::string & path )
 }
 
 // Call a mathod on app wrapper
-bool callAppMethod( const std::string & func )
+bool callAppMethod( const std::string & func, bool optional=false )
 {
+	if(optional)
+	{
+		if(!PyObject_HasAttrString(app, (char*)func.c_str()))
+			return false;
+	}
+
     PyObject *ret = PyObject_CallMethod(app, (char*)func.c_str(),NULL);
-    if (ret == NULL) {
+    if (ret == NULL)
+	{
         dumpErrors();
         return false;
         //PyRun_SimpleString("sys.stderr.flush()");
@@ -415,6 +424,9 @@ void setupParamDict()
 
 bool init()
 {
+	// Useful to know we are running interactive from custom packages
+	putenv("COLORMOTOR_GL=1");
+	
 	gfx::setManualGLRelease(true);
 
 	std::vector<std::string> modulePaths;
@@ -555,7 +567,8 @@ bool init()
 #endif
     
 	// store old modules for full module reload
-	PyRun_SimpleString("oldmods = set(sys.modules.keys())");
+	// now in setup.py
+	//PyRun_SimpleString("oldmods = set(sys.modules.keys())");
     
     params.loadXml(getExecutablePath() + "/repl.xml");
     if(lastScript!="none")
@@ -681,6 +694,17 @@ void frame()
 void gui()
 {
 	imgui(params);
+	if(app_desc.size())
+	{
+		bool vis = ImGui::CollapsingHeader(std::string(scriptParams.getName() + " description:").c_str(), ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_DefaultOpen);
+		if(vis)
+		{
+			ImGui::TextWrapped(app_desc.c_str());
+		}
+	}
+	
+	callAppMethod("gui", true); // optional call
+
     imgui(scriptParams);
 }
 
@@ -731,6 +755,9 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
                 errStatus = 1;
     }
     
+	// Clear description:
+	app_desc = "";
+
 	// Save script params if load was successful
 	if( curPath != "none" && reloadCount == 0 && !failedToLoad && !errStatus  ) // Just save on successful load
 	{
@@ -780,8 +807,8 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 	{
 		const char* cmd = "remods=[]\n"
 						  "for mod in set(sys.modules.keys()).difference(oldmods): remods.append(mod)\n"
-						  "for mod in remods: sys.modules.pop(mod)";
-		PyRun_SimpleString(cmd);
+						  "for mod in remods if not 'matplotlib' in mod and not 'numpy' in mod: sys.modules.pop(mod)";
+		PyRun_SimpleString("reload_modules()"); //cmd);
         //PyRun_SimpleString("for mod in set(sys.modules.keys()).difference(oldmods): sys.modules.pop(mod)");
 	}
 	PyObject* PyFileObject = PyFile_FromString((char*)path.c_str(), "r"); 
@@ -820,6 +847,7 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 		return false;
 	}
     
+	
     // Hack we expose a 'self' variable to access app for debugging
     PyRun_SimpleString("self = App()");
     PyRun_SimpleString("app.run(self)\n");
@@ -946,6 +974,11 @@ namespace pyapp
 	double fps()
 	{
 		return ImGui::GetIO().Framerate;
+	}
+	
+	std::string name()
+	{
+		return pyrepl::getScriptName();
 	}
 	
 	// app utils
@@ -1317,6 +1350,11 @@ namespace pyapp
             return path;
         return "";
     }
+
+	void desc( const std::string& str )
+	{
+		pyrepl::app_desc = str;
+	}
 
     void test( const V4& cazzo ) { cazzo.print(); }
     
