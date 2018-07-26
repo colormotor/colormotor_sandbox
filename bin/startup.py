@@ -6,6 +6,10 @@ import os
 import sys
 sys.argv = ['colormotor_sandbox']
 
+print("Trying to import cv")
+import cv2
+
+
 # NetworkX seems to be necessary for reload issues
 print("preloading modules")
 try:

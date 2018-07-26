@@ -82,6 +82,7 @@ static bool mustReload = false;
 static bool scriptLoaded = false;
 static bool failedToLoad = false;
 static bool reloadModules = true;
+static bool bLoadScriptParams = true;
 
 static FileWatcher* watcher = 0; 
 
@@ -471,28 +472,32 @@ bool init()
 	// add default params
     params.addEvent( "load...", _loadScript );
 	params.addEvent( "reload", _reloadScript )->appendOption("sameline");
-    params.addEvent("duplicate...",_duplicateScript)->appendOption("sameline");;
-    params.addBool( "reload modules", &reloadModules )->appendOption("sameline");
-    
+    params.addEvent("duplicate...",_duplicateScript)->appendOption("sameline");
+    params.addBool( "reload modules", &reloadModules );
+    params.addBool("load params", &bLoadScriptParams)->appendOption("sameline");
 	params.addString( "last script",&lastScript )->appendOption("g");
 
 	// Set program name
-	Py_SetProgramName("PyREPL");
+	Py_SetProgramName("colormotor_sandbox");
 	#ifdef PYTHON_HOME
 		Py_SetPythonHome(PYTHON_HOME);
 	#endif
 
 	printf("Initializing Python\n");
-	printf("Py_GetPythonHome(): \n%s", Py_GetPythonHome());
-	printf("Py_GetCopyright(): \n%s", Py_GetCopyright());
+	printf("Python home: \n%s\n", Py_GetPythonHome());
+	printf("Python path: \n%s\n", Py_GetPath());
+	printf("Python exec path: \n%s\n", Py_GetProgramFullPath());
+	printf("%s\n", Py_GetPlatform());
+	printf("%s\n", Py_GetCompiler());
+	printf("%s\n", Py_GetBuildInfo());
 	
 	// Initialize the Python interpreter.
     PyEval_InitThreads();
-    
 	Py_Initialize();
 
-	printf("Done\n");
+	printf("Done initializing python\n");
 
+	printf("Importing swig bindings\n");
 	// Swig bindings
 	initializeSwig_cm();
 	initializeSwig_app();
@@ -547,10 +552,14 @@ bool init()
     }
     
 	// default import cm
-	PyRun_SimpleString("from cm import *\n");
+	PyRun_SimpleString("import numpy as np");
+	PyRun_SimpleString("import cm\n");
 	PyRun_SimpleString("import app\n");
-    PyRun_SimpleString("import numpy as np");
-    PyRun_SimpleString("import time");
+	
+	// PyRun_SimpleString("from cm import *\n");
+	// PyRun_SimpleString("import app\n");
+    // PyRun_SimpleString("import numpy as np");
+    // PyRun_SimpleString("import time");
     
 #ifdef OSC_ENABLED
     PyRun_SimpleString("print \"Importing OSC\"\n");
@@ -865,7 +874,7 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 	}
 
     std::string xm = curPath+ scriptName + ".xml";
-    if( curPath != "none" )
+    if( curPath != "none" && bLoadScriptParams )
     {
         log(xm.c_str());
         loadScriptParams(xm.c_str());

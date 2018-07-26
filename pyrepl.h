@@ -12,7 +12,7 @@
 #include "Python.h"
 #include "cm_params.h"
 #include "cm_imgui.h"
-#define OSC_ENABLED
+//#define OSC_ENABLED
 
 extern std::mutex log_mutex;
 
