@@ -38,7 +38,7 @@ link_directories(
 )
   
 if(APPLE)
-  set(BASE_SEARCH_DIR $ENV{HOME}/miniconda2)
+  set(BASE_SEARCH_DIR $ENV{HOME}/miniconda3)
   message("Base dir is " ${BASE_SEARCH_DIR})
   set(ARMADILLO_LIBRARIES
 		${ARMADILLO_LIBRARIES}
@@ -64,9 +64,9 @@ if(APPLE)
 
   #${ARMADILLO_INCLUDE_DIRS}
   include_directories(
-    	  ${BASE_SEARCH_DIR}/lib/python2.7/site-packages/numpy/core/include/
+    	  ${BASE_SEARCH_DIR}/lib/python3.6/site-packages/numpy/core/include/
         ${BASE_SEARCH_DIR}/include
-        ${BASE_SEARCH_DIR}/include/python2.7
+        ${BASE_SEARCH_DIR}/include/python3.6m
         )
   
   #set(CMAKE_EXE_LINKER_FLAGS "-rpath ${BASE_SEARCH_DIR}/lib")
@@ -88,7 +88,7 @@ if(APPLE)
 		LAPACK
 		blas
 		glfw
-		python2.7
+		python3.6m
     pycm
 		"-framework CoreFoundation"
 		"-framework OpenGL"	

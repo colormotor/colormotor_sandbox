@@ -1,4 +1,4 @@
-print "Executing startup script"
+print("Executing startup script")
 import math
 import numpy as np
 import scipy as sp

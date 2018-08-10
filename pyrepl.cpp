@@ -10,6 +10,7 @@
 
 #include "pyrepl.h"
 #include "Python.h"
+
 //#include <boost/python.hpp>
 #include "cm_wrap.h"
 #include "app_wrap.h"
@@ -18,9 +19,20 @@
 extern "C" 
 {
 void SWIG_init();
+PyObject* PyInit__app(void);
 }
 
+
+
 std::mutex log_mutex;
+
+static std::wstring string2wstring(const std::string& s)
+{
+	return std::wstring (s.begin(), s.end());
+}
+
+// this is so sick...
+#define WSTR(s) (wchar_t*)string2wstring(s).c_str()
 
 // Log function for redirecting stdout
 static PyObject* captureStdout(PyObject* self, PyObject* pArgs)
@@ -50,12 +62,53 @@ static PyObject* captureStderr(PyObject* self, PyObject* pArgs)
 	return Py_None;
 }
 
+// This became plain horrible
+// see: https://docs.python.org/3/howto/cporting.html
+
+struct module_state {
+    PyObject *error;
+};
+
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+
+static int myextension_traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int myextension_clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
 // 
 static PyMethodDef logMethods[] = {
 	{"CaptureStdout", captureStdout, METH_VARARGS, "Logs stdout"},
 	{"CaptureStderr", captureStderr, METH_VARARGS, "Logs stderr"},
 	{NULL, NULL, 0, NULL}
 };
+
+// Capture stderr/out
+// http://python3porting.com/cextensions.html
+// see also 
+// https://stackoverflow.com/questions/22569833/migrating-from-python-2-to-python-3-embedding-issues
+static struct PyModuleDef log_moduledef = {
+	PyModuleDef_HEAD_INIT,
+	"log",
+	"stdout, stderr capture",
+	-1,
+	logMethods,
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+
+static PyObject* PyInit__log(void)
+{
+	return PyModule_Create(&log_moduledef);
+}
+
 
 //using namespace cm;
 namespace cm
@@ -147,8 +200,8 @@ int executeAndPrint( const std::string & str )
         return -1;
     }
     Py_DECREF(v);
-    if (Py_FlushLine())
-        PyErr_Clear();
+    //if (Py_FlushLine())
+    PyErr_Clear();
     return 0;
 }
 
@@ -317,8 +370,8 @@ bool callAppMethod( const std::string & func, bool optional=false )
     
     Py_DECREF(ret);
     
-    if (Py_FlushLine())
-        PyErr_Clear();
+    //if (Py_FlushLine())
+    PyErr_Clear();
     
     return true;
 }
@@ -478,32 +531,41 @@ bool init()
 	params.addString( "last script",&lastScript )->appendOption("g");
 
 	// Set program name
-	Py_SetProgramName("colormotor_sandbox");
+	Py_SetProgramName(WSTR("colormotor_sandbox"));
 	#ifdef PYTHON_HOME
-		Py_SetPythonHome(PYTHON_HOME);
+		Py_SetPythonHome(WSTR(PYTHON_HOME));
 	#endif
 
-	printf("Initializing Python\n");
-	printf("Python home: \n%s\n", Py_GetPythonHome());
-	printf("Python path: \n%s\n", Py_GetPath());
-	printf("Python exec path: \n%s\n", Py_GetProgramFullPath());
-	printf("%s\n", Py_GetPlatform());
-	printf("%s\n", Py_GetCompiler());
-	printf("%s\n", Py_GetBuildInfo());
+	std::wcout << L"Initializing Python\n";
+	std::wcout << L"Python home: " << Py_GetPythonHome() << std::endl;
+	std::wcout << L"Python path: " << Py_GetPath() << std::endl;
+	std::wcout << L"Python exec path: " << Py_GetProgramFullPath();
+	std::wcout << Py_GetPlatform()  << std::endl;
+	std::wcout << Py_GetCompiler()  << std::endl;
+	std::wcout << Py_GetBuildInfo()  << std::endl;
 	
 	// Initialize the Python interpreter.
-    PyEval_InitThreads();
-	Py_Initialize();
+   
+	
+	std::cout << "Done initializing python\n";
 
-	printf("Done initializing python\n");
-
-	printf("Importing swig bindings\n");
+	std::cout << "Importing swig bindings\n";
 	// Swig bindings
+	
+	// ridiculous
+	PyImport_AppendInittab("log", &PyInit__log);
+	PyImport_AppendInittab("_app", &PyInit__app);
+
+	 //
+	Py_Initialize();
+	PyEval_InitThreads();
+
 	initializeSwig_cm();
 	initializeSwig_app();
     
-	// Capture stderr/out
-	Py_InitModule("log", logMethods);
+
+	//PyModule_Create(&log_moduledef);
+	//Py_InitModule("log", logMethods);
 	
 	PyRun_SimpleString(
 					   "import log\n"
@@ -820,7 +882,7 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 		PyRun_SimpleString("reload_modules()"); //cmd);
         //PyRun_SimpleString("for mod in set(sys.modules.keys()).difference(oldmods): sys.modules.pop(mod)");
 	}
-	PyObject* PyFileObject = PyFile_FromString((char*)path.c_str(), "r"); 
+	//PyObject* PyFileObject = PyFile_FromString((char*)path.c_str(), "r"); 
 	
 	std::string chdir = "import os\n";
 	chdir += "os.chdir(\'";
@@ -842,7 +904,8 @@ bool load( const std::string & path, bool bInit, int reloadCount  )
 	PyRun_SimpleString("import app\n");
     PyRun_SimpleString("import numpy as np");
     
-	if(PyRun_SimpleFile(PyFile_AsFile(PyFileObject), path.c_str()) != 0)
+	FILE *fp = fopen(path.c_str(), "r");
+	if(PyRun_SimpleFile(fp, path.c_str()) != 0) //PyFile_AsFile(PyFileObject), path.c_str()) != 0)
 	{
 		log("Could not execute file %s",path.c_str());
 		if( reloadCount == 0 )

@@ -13,10 +13,10 @@ class App:
             print p
             
     def init(self):
-        print "Init"
+        print("Init")
 
     def exit(self):
-        print "Exit"
+        print("Exit")
 
     def frame(self):
         f = app.getFloat('foo')
