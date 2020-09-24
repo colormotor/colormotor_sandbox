@@ -1,0 +1,12 @@
+---
+BasedOnStyle: Google
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignAfterOpenBracket: true
+AlignOperands: true
+AllowAllArgumentsOnNextLine: false
+BinPackArguments: false
+BinPackParameters: false
+IndentWidth: 2
+ColumnLimit: 0
+...
