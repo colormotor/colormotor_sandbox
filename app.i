@@ -42,7 +42,8 @@ namespace pyapp
 	    KEY_DELETE = ImGuiKey_Delete,    // for text edit
 	    KEY_BACKSPACE = ImGuiKey_Backspace, // for text edit
 	    KEY_ENTER = ImGuiKey_Enter,     // for text edit
-	    KEY_ESCAPE = ImGuiKey_Escape    // for text edit
+	    KEY_ESCAPE = ImGuiKey_Escape,    // for text edit
+      KEY_SPACE = 32
   	};
 
     double dt();
@@ -102,6 +103,8 @@ namespace pyapp
     std::string saveFileDialog( const std::string & type );
     std::string openFolderDialog();
     
+    void saveParams( const std::string& path );
+    void loadParams( const std::string& path );
 
     void loadScript( const char * script );
 

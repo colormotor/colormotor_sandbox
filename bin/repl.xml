@@ -5,7 +5,7 @@
         <var type="EVENT" name="duplicate...">0</var>
         <var type="BOOL" name="reload modules">1</var>
         <var type="BOOL" name="load params">1</var>
-        <var type="STRING" name="last script">/Users/colormotor/develop/autograff/python/projects/graffitype/interactive/tests/star_test.py</var>
+        <var type="STRING" name="last script">/Users/colormotor/develop/autograff/python/projects/experiments2020/interactive/swirly_squares/grid_test.py</var>
     </Params>
     <Children/>
 </Params>

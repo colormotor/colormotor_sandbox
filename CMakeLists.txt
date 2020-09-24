@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(colormotor_sandbox)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set( CMAKE_VERBOSE_MAKEFILE on )
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
@@ -36,9 +37,11 @@ include_directories(include
 link_directories(
 	${PROJECT_SOURCE_DIR}/../colormotor/addons/pycolormotor/modules
 )
-  
+
+find_package(PythonLibs REQUIRED)
+
 if(APPLE)
-  set(BASE_SEARCH_DIR $ENV{HOME}/miniconda3)
+  set(BASE_SEARCH_DIR $ENV{HOME}/opt/miniconda3)
   message("Base dir is " ${BASE_SEARCH_DIR})
   set(ARMADILLO_LIBRARIES
 		${ARMADILLO_LIBRARIES}
@@ -60,13 +63,17 @@ if(APPLE)
 
   link_directories(
     ${BASE_SEARCH_DIR}/lib
+    ${PROJECT_SOURCE_DIR}/../colormotor/addons/cmx_imgui_app/src/glfw3/lib/osx
+    ${PYTHON_LIBRARY_DIRS}
   )
 
   #${ARMADILLO_INCLUDE_DIRS}
   include_directories(
-    	  ${BASE_SEARCH_DIR}/lib/python3.6/site-packages/numpy/core/include/
+    	  ${BASE_SEARCH_DIR}/lib/python3.8/site-packages/numpy/core/include/
         ${BASE_SEARCH_DIR}/include
-        ${BASE_SEARCH_DIR}/include/python3.6m
+        ${PYTHON_INCLUDE_DIRS}
+        ${BASE_SEARCH_DIR}/include/opencv4
+        ${PROJECT_SOURCE_DIR}/../colormotor/addons/cmx_imgui_app/src/glfw3/include
         )
   
   #set(CMAKE_EXE_LINKER_FLAGS "-rpath ${BASE_SEARCH_DIR}/lib")
@@ -83,12 +90,13 @@ if(APPLE)
     opencv_core
 		opencv_imgproc
 		opencv_highgui
-		opencv_imgcodecs
+    opencv_imgcodecs
+    opencv_videoio
 		armadillo
 		LAPACK
 		blas
-		glfw
-		python3.6m
+		glfw3
+		${PYTHON_LIBRARY_DIRS}/${PYTHON_LIBRARIES}
     pycm
 		"-framework CoreFoundation"
 		"-framework OpenGL"	

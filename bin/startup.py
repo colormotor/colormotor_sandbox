@@ -4,6 +4,7 @@ import numpy as np
 import scipy as sp
 import os
 import sys
+
 sys.argv = ['colormotor_sandbox']
 
 print("Trying to import cv")
@@ -47,6 +48,14 @@ def reload_modules():
     for mod in remods:
         sys.modules.pop(mod)
 
+def add_mod_path(modpath):
+    import os, sys
+    modpath = os.path.abspath(modpath)
+    print('Adding ' + modpath)
+        
+    if not modpath in sys.path:
+        sys.path.append(modpath)
+
 def brk():
     ''' Debug utility
         Can insert this in a script to create a fake breakpoint
@@ -69,5 +78,17 @@ def brk():
         raise ValueError
     finally:
         del frame
+
+global_vars = lambda: None
+
+
+def params_to_globals():
+    import app
+
+    g = globals()
+    for key, val in app.params.items():
+        if not ' ' in key:
+            g[key] = val
+
 
 print("Success.")
