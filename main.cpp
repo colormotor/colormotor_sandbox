@@ -3,10 +3,13 @@
 /// except for adding your AppModule's
 /// or changing the window size/name
 /// Unless some more complex logic has to happen.
+// clang-format off
+
+#include "colormotor.h"
 
 #include "app.h"
 #include "cm_imgui_app.h"
-#include "colormotor.h"
+// clang-format on
 
 using namespace cm;
 using namespace cv;

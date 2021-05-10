@@ -8,7 +8,10 @@ import sys
 sys.argv = ['colormotor_sandbox']
 
 print("Trying to import cv")
-import cv2
+try:
+    import cv2
+except:
+    print("Python OpenCV not available")
 
 
 # NetworkX seems to be necessary for reload issues

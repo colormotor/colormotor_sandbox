@@ -1,8 +1,9 @@
 #pragma once
-#include "colormotor.h"
+// clang-format off
+#include "cm_imgui_app.h"
 #include "console.h"
 #include "pyrepl.h"
-
+// clang-format on
 using namespace cm;
 
 class App : public AppModule {
@@ -15,13 +16,12 @@ class App : public AppModule {
   Console         console;
   bool            showConsole = true;
   float           paramWidth  = 300;
+  Trigger<bool>   saveSvg_;
 
-  Trigger<bool> saveSvg_;
-
-  bool        capturing = false;
-  std::string capturePath;
-  int         captureFrame = 0;
-  Image       captureImg;
+  bool capturing             = false;
+  int  max_video_frames      = 90;
+  int  captureFPS            = 30;
+  int  captured_video_frames = 0;
 
   struct
   {
@@ -56,6 +56,9 @@ class App : public AppModule {
     params.addColor("main", &uiColors.col_main);
     params.addColor("back", &uiColors.col_back);
     params.addColor("area", &uiColors.col_area);
+    params.newChild("Screencapture");
+    params.addInt("FPS", &captureFPS);
+    params.addInt("max_video_frames", &max_video_frames);
 
     params.loadXml(getExecutablePath() + "/settings.xml");
     std::string dt = binarize("basic_icons.ttf", "icon_font");
@@ -80,31 +83,29 @@ class App : public AppModule {
 
   void startCapture() {
     std::string path;
-    if (!openFolderDialog(path, "Select Capture Folder...")) {
-      return;
+    if (saveFileDialog(path, "mp4")) {
+      gfx::beginScreenRecording(path, appWidth() - paramWidth, appHeight() - console.inputHeight, 30.);
+#ifdef OSC_ENABLED
+      osc.start_recording();
+#endif
     }
-
-    capturePath  = path;
-    capturing    = true;
-    captureFrame = 0;
-    captureImg   = Image(appWidth() - paramWidth, appHeight() - console.inputHeight, Image::BGRA);
   }
 
   void stopCapture() {
-    capturing = false;
+    gfx::endScreenRecording();
   }
 
   void capture() {
-    if (!capturing)
+    if (!gfx::isScreenRecording())
       return;
 
-    captureImg.grabFrameBuffer();
-    std::stringstream ss;
-    ss << captureFrame << ".png";
-    std::string path = joinPath(capturePath, ss.str());
-    captureImg.save(path);
-    captureFrame++;
-    //grabFrameBuffer
+    if (captured_video_frames >= max_video_frames) {
+      std::cout << "Ending video capture \n";
+      stopCapture();
+      return;
+    }
+    gfx::saveScreenFrame();
+    captured_video_frames++;
   }
 
   bool init() {
@@ -129,10 +130,10 @@ class App : public AppModule {
     //static bool opendemo=true;
     //ImGui::ShowDemoWindow(&opendemo);
     //return false;
-    ImGui::SetupStyle(uiColors.col_text,
-                      uiColors.col_main,
-                      uiColors.col_back,
-                      uiColors.col_area);
+    // ImGui::SetupStyle(uiColors.col_text,
+    //                   uiColors.col_main,
+    //                   uiColors.col_back,
+    //                   uiColors.col_area);
     // Resizable settings UI on the side
     static bool show = true;
     ImVec2      size = ImVec2(paramWidth, appHeight());
@@ -151,39 +152,78 @@ class App : public AppModule {
     ImGui::SameLine();
 
     ImGui::BeginChild("content");
-    imgui(params);  // Creates a UI for the parameters
+    if (ImGui::BeginTabBar("MainTabBar", ImGuiTabBarFlags_None)) {
+      ///
+      if (ImGui::BeginTabItem("App")) {
+        imgui(params);  // Creates a UI for the parameters
+
+        bool vis = ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_AllowItemOverlap);  //, NULL, true, true);
+        if (vis) {
+          ImGui::Text("Framerate: %g", pyapp::fps());
+          ImGui::Text("Script: %s", pyrepl::getScriptPath().c_str());
+        }
+
+        pyrepl::gui();
+
+        ImGui::EndTabItem();
+      }
+
+      if (ImGui::BeginTabItem("Video recording")) {
+        ImGui::InputInt("max video frames", &max_video_frames);
+
+        {
+          const char*               items[] = {"Select",
+                                 "512x512",
+                                 "800x800",
+                                 "1024x768",
+                                 "1280×720",
+                                 "1920x1080"};
+          const std::pair<int, int> sizes[] = {
+              {512, 512},
+              {800, 800},
+              {1024, 768},
+              {1280, 720},
+              {1920, 1080}};
+          static int item_current = 0;
+          if (ImGui::Combo("Set Window Size",
+                           &item_current,
+                           items,
+                           IM_ARRAYSIZE(items))) {
+            if (item_current != 0) {
+              cm::setWindowSize(sizes[item_current - 1].first + paramWidth,
+                                sizes[item_current - 1].second + console.inputHeight);
+            }
+            item_current = 0;
+          }
+        }
+
+        if (ImGui::Button("Save Video...")) {
+          std::string path;
+          if (saveFileDialog(path, "mp4")) {
+            captured_video_frames = 0;
+            std::cout << "Saving video " << appWidth() - paramWidth << ", " << appHeight() - console.inputHeight << std::endl;
+            gfx::beginScreenRecording(path, appWidth() - paramWidth, appHeight() - console.inputHeight, 30.);
+            pyrepl::reload();
+          }
+        }
+
+        if (gfx::isScreenRecording()) {
+          ImGui::SameLine();
+          if (ImGui::Button("Stop recording")) gfx::endScreenRecording();
+        }
+
+        ImGui::EndTabItem();
+      }
+
+      ImGui::EndTabBar();
+    }
 
     bool vis;
-
-    // save frames
-    vis = ImGui::CollapsingHeader("Save Frames", ImGuiTreeNodeFlags_AllowItemOverlap);  //, NULL, true, true);
-    if (vis) {
-      if (capturing) {
-        static bool on = true;
-        ImGui::Checkbox(" ", &on);
-        on = true;
-
-        if (ImGui::Button("Stop Capture")) {
-          stopCapture();
-        }
-      } else {
-        if (ImGui::Button("Start Capture...")) {
-          startCapture();
-        }
-      }
-    }
-
-    vis = ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_AllowItemOverlap);  //, NULL, true, true);
-    if (vis) {
-      ImGui::Text("Framerate: %g", pyapp::fps());
-      ImGui::Text("Script: %s", pyrepl::getScriptPath().c_str());
-    }
 
 #ifdef OSC_ENABLED
     // OSC GOES HERE
 #endif
 
-    pyrepl::gui();
     ImGui::EndChild();
     ImGui::End();
 

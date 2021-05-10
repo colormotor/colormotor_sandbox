@@ -50,7 +50,7 @@ static PyObject* captureStderr(PyObject* self, PyObject* pArgs) {
   char* LogStr = NULL;
   if (!PyArg_ParseTuple(pArgs, "s", &LogStr)) return NULL;
 
-  cm::pyrepl::error(LogStr);
+  cm::pyrepl::errorstr(LogStr);
 
   Py_INCREF(Py_None);
   return Py_None;
@@ -188,7 +188,11 @@ int executeAndPrint(const std::string& str) {
   return 0;
 }
 
-static void print(const char* msg, ...) {
+static void print(const char* msg) {
+  std::cout << msg;
+}
+
+static void fprint(const char* msg, ...) {
   char    msgBuf[1024];
   va_list va_alist;
 
@@ -208,7 +212,15 @@ static bool hasFileChanged() {
   return watcher->hasFileChanged();
 }
 
-void log(const char* msg, ...) {
+void log(const char* msg) {
+  print(msg);
+  if (logCb)
+    logCb(msg);
+  //    for( int i = 0; i < listeners.size(); i++ )
+  //        listeners[i]->replLog(msgBuf);
+}
+
+void flog(const char* msg, ...) {
   char    msgBuf[1024];
   va_list va_alist;
 
@@ -226,17 +238,29 @@ void log(const char* msg, ...) {
   //        listeners[i]->replLog(msgBuf);
 }
 
+void errorstr(const char* msg) {
+  print(msg);
+  //errorBuf += msgBuf;
+  if (errCb)
+    logCb(msg);
+  //	for( int i = 0; i < listeners.size(); i++ )
+  //		listeners[i]->replError(msgBuf);
+}
+
 void error(const char* msg, ...) {
-  char    msgBuf[1024];
+#define ERR_BUF_SIZE 10000
+  char    msgBuf[ERR_BUF_SIZE];
   va_list va_alist;
 
   if (!msg) return;
 
-  va_start(va_alist, msg);
-  vsnprintf(msgBuf, 1024, msg, va_alist);
-  va_end(va_alist);
-  msgBuf[1024 - 1] = '\0';
+  if (strlen(msg) > ERR_BUF_SIZE - 1)
+    return;
 
+  va_start(va_alist, msg);
+  vsnprintf(msgBuf, ERR_BUF_SIZE, msg, va_alist);
+  va_end(va_alist);
+  msgBuf[ERR_BUF_SIZE - 1] = '\0';
   print(msgBuf);
   //errorBuf += msgBuf;
 
@@ -317,7 +341,7 @@ static const char* defaultClass =
 
              app = App()\n);
 
-std::string absolutPath(const std::string& path) {
+std::string absolutePath(const std::string& path) {
   char absPath[PATH_MAX];
   realpath(path.c_str(), absPath);
   return absPath;
@@ -331,13 +355,15 @@ bool callAppMethod(const std::string& func, bool optional = false) {
   }
 
   PyObject* ret = PyObject_CallMethod(app, (char*)func.c_str(), NULL);
-  if (ret == NULL) {
-    dumpErrors();
-    return false;
+  if (ret != NULL) {
+    Py_DECREF(ret);
     //PyRun_SimpleString("sys.stderr.flush()");
   }
 
-  Py_DECREF(ret);
+  if (PyErr_Occurred()) {
+    dumpErrors();
+    return false;
+  }
 
   //if (Py_FlushLine())
   PyErr_Clear();
@@ -375,6 +401,7 @@ void popChild() {
   curChild.pop_back();
 }
 
+/// Populate a ~app.params~ dict accessible to the scripts
 void addParamsToDict(ParamList* params) {
   static const char* bools[2] = {"False", "True"};
 
@@ -460,7 +487,7 @@ bool init() {
     std::string path;
     while (readLine(path, f)) {
       if (path.length() > 1) {
-        std::string absp = absolutPath(path);
+        std::string absp = absolutePath(path);
         modulePaths.push_back(absp);
       }
     }
@@ -492,9 +519,7 @@ bool init() {
   std::wcout << Py_GetBuildInfo() << std::endl;
 
   // Initialize the Python interpreter.
-
   std::cout << "Done initializing python\n";
-
   std::cout << "Importing swig bindings\n";
   // Swig bindings
 
@@ -508,9 +533,6 @@ bool init() {
 
   initializeSwig_cm();
   initializeSwig_app();
-
-  //PyModule_Create(&log_moduledef);
-  //Py_InitModule("log", logMethods);
 
   PyRun_SimpleString(
       "import log\n"
@@ -607,7 +629,7 @@ void frame() {
     if (e->event.val != e->event.oldVal)
       printf("Event %s: %d, %d\n", e->name.c_str(), (int)e->event.val, (int)e->event.oldVal);
     if (e->func && e->event.isTriggered()) {
-      log("received event %s", e->name.c_str());
+      flog("received event %s", e->name.c_str());
       PyObject* arglist = Py_BuildValue("()");
       PyObject* result  = PyEval_CallObject(e->func, arglist);
       // check for error
@@ -657,9 +679,11 @@ void frame() {
   //Py_BEGIN_ALLOW_THREADS
   // Setup parameter dict
   setupParamDict();
-
+  ImGuiIO& io  = ImGui::GetIO();
+  int      dpx = io.DisplayFramebufferScale.x;
+  int      dpy = io.DisplayFramebufferScale.y;
   gfx::pushViewport();
-  gfx::setViewport(0, appHeight() - pyapp::height(), pyapp::width(), pyapp::height());
+  gfx::setViewport(0, (appHeight() - pyapp::height()) * dpy, pyapp::width() * dpx, pyapp::height() * dpy);
   gfx::setOrtho(pyapp::width(), pyapp::height());
   if (!errStatus) {
     if (!callAppMethod("frame"))
@@ -806,7 +830,7 @@ bool load(const std::string& path, bool bInit, int reloadCount) {
   syspath += "\tsys.path.append(\'";
   syspath += curPath;
   syspath += "\')\n";
-  print("%s", syspath.c_str());
+  fprint("%s", syspath.c_str());
   PyRun_SimpleString(syspath.c_str());
 
   PyRun_SimpleString("from cm import *\n");
@@ -816,7 +840,7 @@ bool load(const std::string& path, bool bInit, int reloadCount) {
   FILE* fp = fopen(path.c_str(), "r");
   if (PyRun_SimpleFile(fp, path.c_str()) != 0)  //PyFile_AsFile(PyFileObject), path.c_str()) != 0)
   {
-    log("Could not execute file %s", path.c_str());
+    flog("Could not execute file %s", path.c_str());
     if (reloadCount == 0) {
       failedToLoad = true;
       errStatus    = 1;
@@ -831,7 +855,7 @@ bool load(const std::string& path, bool bInit, int reloadCount) {
   PyRun_SimpleString("self = App()");
   PyRun_SimpleString("app.run(self)\n");
 
-  log("Succesfully loaded file %s", path.c_str());
+  flog("Succesfully loaded file %s", path.c_str());
 
   if (!failedToLoad) {
     //hasError = false;
@@ -991,6 +1015,12 @@ bool mouseDown(int i) {
   return Mouse::down(i);
 }
 
+bool keyDown(int k) {
+  if (ui::hasFocus())
+    return false;
+  return Keyboard::down(k);
+}
+
 bool keyPressed(int k) {
   if (ui::hasFocus())
     return false;
@@ -1025,7 +1055,7 @@ float getFloat(const std::string& name) {
   if (p)
     return p->getFloat();
   else {
-    pyrepl::log("could not find param %s\n", name.c_str());
+    pyrepl::flog("could not find param %s\n", name.c_str());
     return 0;
   }
 }
@@ -1038,7 +1068,7 @@ bool getBool(const std::string& name) {
   if (p)
     return p->getBool();
   else {
-    pyrepl::log("could not find param %s\n", name.c_str());
+    pyrepl::flog("could not find param %s\n", name.c_str());
     return false;
   }
 }
@@ -1061,7 +1091,7 @@ Param* addFloat(const std::string& name, float val, float min, float max, const 
   Param* p = 0;
   p        = pyrepl::scriptParams.find(name);
   if (p) {
-    pyrepl::log("parameter %s allready there.....\n", name.c_str());
+    pyrepl::flog("parameter %s allready there.....\n", name.c_str());
     return p;
   }
   p = pyrepl::scriptParams.addFloat(name, val, min, max);
@@ -1076,7 +1106,7 @@ Param* addInt(const std::string& name, int val) {
   Param* p = 0;
   p        = pyrepl::scriptParams.find(name);
   if (p) {
-    pyrepl::log("parameter %s allready there.....\n", name.c_str());
+    pyrepl::flog("parameter %s allready there.....\n", name.c_str());
     return p;
   }
   p = pyrepl::scriptParams.addInt(name, val);
@@ -1097,7 +1127,7 @@ Param* addSelection(const std::string& name, const std::vector<std::string>& sel
   Param* p = 0;
   p        = pyrepl::scriptParams.find(name);
   if (p) {
-    pyrepl::log("parameter %s allready there.....\n", name.c_str());
+    pyrepl::flog("parameter %s allready there.....\n", name.c_str());
     return p;
   }
   p = pyrepl::scriptParams.addSelection(name, selections, val);
@@ -1116,7 +1146,7 @@ Param* addBool(const std::string& name, bool val) {
   Param* p = 0;
   p        = pyrepl::scriptParams.find(name);
   if (p) {
-    pyrepl::log("parameter %s allready there.....\n", name.c_str());
+    pyrepl::flog("parameter %s allready there.....\n", name.c_str());
     return p;
   }
   p = pyrepl::scriptParams.addBool(name, val);
@@ -1127,7 +1157,7 @@ Param* addString(const std::string& name, const std::string& val) {
   Param* p = 0;
   p        = pyrepl::scriptParams.find(name);
   if (p) {
-    pyrepl::log("parameter %s allready there.....\n", name.c_str());
+    pyrepl::flog("parameter %s allready there.....\n", name.c_str());
     return p;
   }
   p = pyrepl::scriptParams.addString(name, 0);
@@ -1153,7 +1183,7 @@ std::string getString(const std::string& name) {
   if (p)
     return p->getString();
   else {
-    pyrepl::log("could not find param %s\n", name.c_str());
+    pyrepl::flog("could not find param %s\n", name.c_str());
     return "";
   }
 }
@@ -1162,7 +1192,7 @@ Param* addColor(const std::string& name, const V4& clr) {
   Param* p = 0;
   p        = pyrepl::scriptParams.find(name);
   if (p) {
-    pyrepl::log("parameter %s allready there.....\n", name.c_str());
+    pyrepl::flog("parameter %s allready there.....\n", name.c_str());
     return p;
   }
   p = pyrepl::scriptParams.addColor(name, clr);
@@ -1178,7 +1208,7 @@ V4 getColor(const std::string& name) {
   if (p)
     return p->getColor();
   else {
-    pyrepl::log("could not find param %s\n", name.c_str());
+    pyrepl::flog("could not find param %s\n", name.c_str());
     return V4(0, 0, 0, 0);
   }
 }
@@ -1190,7 +1220,7 @@ int getInt(const std::string& name) {
   if (p)
     return p->getInt();
   else {
-    pyrepl::log("could not find param %s\n", name.c_str());
+    pyrepl::flog("could not find param %s\n", name.c_str());
     return 0;
   }
 }
@@ -1230,8 +1260,12 @@ bool isTriggered(const std::string& name) {
       return e->event.isTriggered();
   }
 
-  pyrepl::log("could not find event %s", name.c_str());
+  pyrepl::flog("could not find event %s", name.c_str());
   return false;
+}
+
+bool isRecording() {
+  return gfx::isScreenRecording();
 }
 
 std::string openFolderDialog() {

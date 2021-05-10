@@ -7,13 +7,14 @@
  *
  */
 #pragma once
-
+// clang-format off
+#include "colormotor.h"
 #include "Python.h"
 #include "cm_imgui.h"
 #include "cm_params.h"
-#include "colormotor.h"
-//#define OSC_ENABLED
 
+//#define OSC_ENABLED
+// clang-format on
 extern std::mutex log_mutex;
 
 namespace cm {
@@ -35,8 +36,10 @@ bool hasErrors();
 
 void resize(int w, int h);
 
-void log(const char* msg, ...);
+void log(const char* msg);
+void flog(const char* msg, ...);
 void error(const char* msg, ...);
+void errorstr(const char* msg);
 void dumpErrors();
 
 bool saveScriptParams();
@@ -50,7 +53,7 @@ void onCommandEntered(const std::string& cmd);
 
 std::string toScriptPath(const std::string& path);
 
-// callback handling
+// std IO callback handling
 extern std::function<void(std::string)> logCb;
 extern std::function<void(std::string)> errCb;
 extern std::function<void()>            reloadCb;
@@ -67,6 +70,7 @@ CM_INLINE void errCallback(void (*fp)(const std::string&)) { errCb = fp; }
 CM_INLINE void reloadCallback(void (*fp)()) { reloadCb = fp; }
 }  // namespace pyrepl
 
+// This is accessible to the script as the ~app~ module
 namespace pyapp {
 enum {
   KEY_TAB        = ImGuiKey_Tab,         // for tabbing through fields
@@ -102,6 +106,7 @@ V2    mousePos();
 V2    center();
 V2    size();
 
+bool keyDown(int k);
 bool keyPressed(int k);
 bool keyReleased(int k);
 bool mouseDown(int i);
@@ -138,6 +143,7 @@ void addSeparator();
 void addParams(const ParamList& params);
 
 bool isTriggered(const std::string& name);
+bool isRecording();
 
 std::string openFileDialog(const std::string& type);
 std::string saveFileDialog(const std::string& type);

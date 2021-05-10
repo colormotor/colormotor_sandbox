@@ -67,7 +67,7 @@ struct Console {
     scrollToBottom = true;
   }
 
-  void log(const char* fmt, ...) IM_FMTARGS(2) {
+  void flog(const char* fmt, ...) IM_FMTARGS(2) {
     char    buf[1024];
     va_list args;
     va_start(args, fmt);
@@ -75,6 +75,11 @@ struct Console {
     buf[ARRAYSIZE(buf) - 1] = 0;
     va_end(args);
     items.push_back(Strdup(buf));
+    scrollToBottom = true;
+  }
+
+  void log(const char* msg) {
+    items.push_back(Strdup(msg));
     scrollToBottom = true;
   }
 
@@ -126,11 +131,11 @@ struct Console {
         const char* item = items[i];
         if (!filter.PassFilter(item))
           continue;
-        ImVec4 col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);  // A better implementation may store a type per-item. For the sample let's just parse the text.
+        ImVec4 col = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);  // A better implementation may store a type per-item. For the sample let's just parse the text.
         if (strstr(item, "[error]") || strstr(item, "Traceback"))
-          col = ImColor(1.0f, 0.4f, 0.4f, 1.0f);
+          col = ImColor(1.0f, 0.2f, 0.0f, 1.0f);
         else if (strncmp(item, "# ", 2) == 0)
-          col = ImColor(1.0f, 0.78f, 0.58f, 1.0f);
+          col = ImColor(0.0f, 0.5f, 1.0f, 1.0f);
         ImGui::PushStyleColor(ImGuiCol_Text, col);
         ImGui::TextUnformatted(item);
         ImGui::PopStyleColor();
@@ -194,7 +199,7 @@ struct Console {
   }
 
   void execCommand(const char* command_line) {
-    log("# %s\n", command_line);
+    flog("# %s\n", command_line);
     consoleOpen = true;
 
     // Insert into history. First find match and delete it so it can be pushed to the back. This isn't trying to be smart or optimal.
@@ -240,7 +245,7 @@ struct Console {
 
         if (candidates.Size == 0) {
           // No match
-          log("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
+          flog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
         } else if (candidates.Size == 1) {
           // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing
           data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
@@ -270,7 +275,7 @@ struct Console {
           // List matches
           log("Possible matches:\n");
           for (int i = 0; i < candidates.Size; i++)
-            log("- %s\n", candidates[i]);
+            flog("- %s\n", candidates[i]);
         }
 
         break;
